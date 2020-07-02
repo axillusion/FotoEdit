@@ -1,6 +1,10 @@
 #ifndef IMAGE_H_INCLUDED
 #define IMAGE_H_INCLUDED
 
+#define IMG_GRAY 1
+#define IMG_RGB 2
+#define IMG_YUV 3
+
 typedef struct Image
 {
     UInt32 width;
@@ -11,7 +15,7 @@ typedef struct Image
     
 } Image;
 
-void CreateImage(
+Int32 CreateImage(
     IN UInt8 format,
     IN UInt8 bpp,
     IN UInt32 width,

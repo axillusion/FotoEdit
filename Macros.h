@@ -12,3 +12,6 @@ typedef unsigned int UInt32;
 
 #define IMG_WIDTH 100
 #define IMG_HEIGHT 100
+
+#define STATUS_OK 0
+#define STATUS_FAIL -1
