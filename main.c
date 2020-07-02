@@ -27,5 +27,8 @@ int main ( int argc, char* argv[] ) {
         printImage ( &img, fout );
     }
 
+    fclose ( fin );
+    fclose ( fout );
+
     return 0;
 }
