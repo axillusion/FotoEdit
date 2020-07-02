@@ -1,4 +1,5 @@
-#include <Image.h>
+#include "Macros.h"
+#include "Image.h"
 
 void CreateImage(
     IN UInt8 format,

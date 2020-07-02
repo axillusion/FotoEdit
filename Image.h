@@ -1,4 +1,5 @@
-#include <Macros.h>
+#ifndef IMAGE_H_INCLUDED
+#define IMAGE_H_INCLUDED
 
 typedef struct Image
 {
@@ -20,3 +21,4 @@ void CreateImage(
 void DestroyImage(
     IN OUT Image** img);
     
+#endif /* IMAGE_H_INCLUDED */
