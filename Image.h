@@ -5,11 +5,28 @@
 #define IMG_RGB 2
 #define IMG_YUV 3
 
+data[][]
+data**
+data*
+
+data[][][3]
+data**
+
+
+plane[3]
+
+ImagePlane
+{
+    UInt8* data;
+    
+}
+
+
 typedef struct Image
 {
     UInt32 width;
     UInt32 height;
-    UInt8* data;
+ImagePlane palnes[3];
     UInt8 bpp;
     UInt8 format;
     
