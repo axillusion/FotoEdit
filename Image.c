@@ -11,7 +11,7 @@ Int32 CreateImage(
     IN UInt32 height,
     OUT Image** img)
 {
-    Int32 status;
+    Int32 status = STATUS_OK;
 
     if ( img == NULL ) 
     {
@@ -30,26 +30,47 @@ Int32 CreateImage(
         }
         else 
         {
-            UInt32 dataSize = width * height * ( ( bpp + 7 ) >> 3 );
-            memset ( newImg, 0, sizeof ( Image ) );
+            UInt32 dataSize;
 
-            newImg -> data = malloc ( dataSize );
-
-            if ( newImg -> data == NULL ) 
+            switch ( format ) 
             {
-                printf ( "CreateImage: could not allocate %d bytes\n", dataSize );
-                status = STATUS_FAIL;
+                case IMG_GRAY : 
+                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ); 
+                    break;
+                case IMG_RGB :
+                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ) * 3;
+                    break;
+                case IMG_YUV :
+                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ) * 2;
+                    break;
+                default :
+                    dataSize = 0;
+                    printf ( "CreateImage: Unknown format %d", format );
+                    status = STATUS_FAIL;  
+                    break;
             }
-            else 
-            {   
-                memset ( newImg -> data, 0, dataSize );
-                newImg -> format = format;
-                newImg -> bpp = bpp;
-                newImg -> width = width;
-                newImg -> height = height;
-                *img = newImg;
+            if ( status == STATUS_OK )
+            {
+                memset ( newImg, 0, sizeof ( Image ) );
 
-                status = STATUS_OK;
+                newImg -> data = malloc ( dataSize );
+
+                if ( newImg -> data == NULL ) 
+                {
+                    printf ( "CreateImage: could not allocate %d bytes\n", dataSize );
+                    status = STATUS_FAIL;
+                }
+                else 
+                {   
+                    memset ( newImg -> data, 0, dataSize );
+                    newImg -> format = format;
+                    newImg -> bpp = bpp;
+                    newImg -> width = width;
+                    newImg -> height = height;
+                    *img = newImg;
+
+                    //status = STATUS_OK;
+                }
             }
         }
     }
@@ -60,12 +81,11 @@ Int32 CreateImage(
 void DestroyImage (
     IN OUT Image** img ) 
 {
-    if ( img == NULL ) 
-    {
-        printf ( "DestroyImage: Missing image" );
-        return ;
+    if ( img != NULL ) 
+    {   
+        free ( ( *img )-> data ) ;
+        free ( *img );
     }
-    free ( *img );
 }
 
     
