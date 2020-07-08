@@ -30,21 +30,24 @@ Int32 CreateImage(
         }
         else 
         {
-            UInt32 dataSize;
+            UInt32 dataSize, nrPlanes;
+            
+            dataSize = width * height * ( ( bpp + 7) >> 3 );
 
             switch ( format ) 
             {
                 case IMG_GRAY : 
-                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ); 
+                    nrPlanes = 1;
                     break;
                 case IMG_RGB :
-                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ) * 3;
+                    nrPlanes = 3;
                     break;
                 case IMG_YUV :
-                    dataSize = width * height * ( ( bpp + 7 ) >> 3 ) * 2;
+                    nrPlanes = 2;
                     break;
                 default :
                     dataSize = 0;
+                    nrPlanes = 0;
                     printf ( "CreateImage: Unknown format %d", format );
                     status = STATUS_FAIL;  
                     break;
@@ -53,16 +56,18 @@ Int32 CreateImage(
             {
                 memset ( newImg, 0, sizeof ( Image ) );
 
-                newImg -> data = malloc ( dataSize );
-
-                if ( newImg -> data == NULL ) 
+                int i;
+                for ( i = 0; i < nrPlanes; ++i )
+                    newImg -> planes[i] -> data = malloc ( dataSize );
+                
+                if ( newImg -> planes == NULL ) 
                 {
                     printf ( "CreateImage: could not allocate %d bytes\n", dataSize );
                     status = STATUS_FAIL;
                 }
                 else 
                 {   
-                    memset ( newImg -> data, 0, dataSize );
+                    memset ( newImg -> planes, 0, dataSize );
                     newImg -> format = format;
                     newImg -> bpp = bpp;
                     newImg -> width = width;
@@ -83,7 +88,7 @@ void DestroyImage (
 {
     if ( img != NULL ) 
     {   
-        free ( ( *img )-> data ) ;
+        free ( ( *img )-> planes ) ;
         free ( *img );
     }
 }

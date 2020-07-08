@@ -9,7 +9,7 @@
 
 int GetImage ( Image* img, FILE* file ) 
 { 
-    Int32 chread = fread ( &img -> data, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
+    Int32 chread = fread ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
 
     Int32 readStatus;
     if ( chread != IMG_HEIGHT * IMG_WIDTH )
@@ -36,12 +36,13 @@ Int32 PrintImage ( Image* img, FILE* file )
     } 
     else 
     {
-        fwrite ( &img -> data, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
+        fwrite ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
         status = STATUS_NOT_EMPTY_IMG;
     }
     return status;
 }
 
+/*
 baza 2      = binara = 0, 1
 baza 10     = decima = [0, 9]
 baza 16     = hexa = [0, F]
@@ -93,7 +94,7 @@ adrr = 0xFF
 main = 0x10
 img = 0
 
-
+*/
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image img;
