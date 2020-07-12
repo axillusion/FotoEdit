@@ -18,12 +18,10 @@ YUV 420 planar
 
 datasize = width * height * 3 / 2;
 */
-
+/*
 stride = width + 1
 
 UInt8* data = malloc( stride * height)
-
-
 
 Image.width = width
 Image.height = height
@@ -61,26 +59,7 @@ offset y = 2
 +----+----+----+----+
 
 UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-
-
-Image img;
-img.width = 4;
-img.height = 4;
-img.format = 0;
-img.bpp = 8;
-img.planes[0].data = imgData;
-img.planes[0].stride = 4;
-
-Image crop;
-crop.width = 2;
-crop.height = 2;
-crop.format = img.format;
-crop.bpp = img.bpp;
-crop.planes[0].stride = img.planes[0].stride;
-crop.planes[0].data = img.planes[0].data + y * img.planes[0].stride + x;
-
-
-
+*/
 
 Int32 CreateImage(
     IN UInt8 format,
@@ -101,58 +80,73 @@ Int32 CreateImage(
         Image* newImg;
 
         newImg = malloc ( sizeof ( Image ) );
-        if ( newImg == NULL ) 
-        {
-            printf ( "CreateImage: could not allocate %d bytes\n", sizeof ( Image ) );
-            status = STATUS_FAIL;
-        }
-        else 
-        {
-            UInt32 dataSize, nrPlanes;
-            
-            dataSize = width * height * ( ( bpp + 7) >> 3 );
+        
+        int plane;
 
-            switch ( format ) 
+        for ( plane = 0; plane < 3; ++plane ) 
+        { 
+            newImg -> planes[plane] = malloc ( sizeof ( ImgPlane ) );
+            if ( newImg -> planes[plane] == NULL )
             {
-                case IMG_GRAY : 
-                    nrPlanes = 1;
-                    break;
-                case IMG_RGB :
-                    nrPlanes = 3;
-                    break;
-                case IMG_YUV :
-                    nrPlanes = 2;
-                    break;
-                default :
-                    dataSize = 0;
-                    nrPlanes = 0;
-                    printf ( "CreateImage: Unknown format %d", format );
-                    status = STATUS_FAIL;  
-                    break;
+                printf ( "Create Image: could not alocate %d bytes for plane\n", sizeof ( ImgPlane ) );
+                status = STATUS_FAIL;
             }
-            if ( status == STATUS_OK )
+        }
+        if ( status != STATUS_FAIL ) 
+        {
+            if ( newImg == NULL ) 
             {
-                memset ( newImg, 0, sizeof ( Image ) );
-
-                int i;
-                for ( i = 0; i < nrPlanes; ++i )
-                    newImg -> planes[i] -> data = malloc ( dataSize );
+                printf ( "CreateImage: could not allocate %d bytes\n", sizeof ( Image ) );
+                status = STATUS_FAIL;
+            }
+            else 
+            {
+                UInt32 dataSize, nrPlanes;
                 
-                if ( newImg -> planes == NULL ) 
-                {
-                    printf ( "CreateImage: could not allocate %d bytes\n", dataSize );
-                    status = STATUS_FAIL;
-                }
-                else 
-                {   
-                    memset ( newImg -> planes, 0, dataSize );
-                    newImg -> format = format;
-                    newImg -> bpp = bpp;
-                    newImg -> width = width;
-                    newImg -> height = height;
-                    *img = newImg;
+                dataSize = width * height * ( ( bpp + 7) >> 3 );
 
-                    //status = STATUS_OK;
+                switch ( format ) 
+                {
+                    case IMG_GRAY : 
+                        nrPlanes = 1;
+                        break;
+                    case IMG_RGB :
+                        nrPlanes = 3;
+                        break;
+                    case IMG_YUV :
+                        nrPlanes = 2;
+                        break;
+                    default :
+                        dataSize = 0;
+                        nrPlanes = 0;
+                        printf ( "CreateImage: Unknown format %d", format );
+                        status = STATUS_FAIL;  
+                        break;
+                }
+                if ( status == STATUS_OK )
+                {
+                    memset ( newImg, 0, sizeof ( Image ) );
+
+                    int i;
+                    for ( i = 0; i < nrPlanes; ++i )
+                        newImg -> planes[i] -> data = malloc ( dataSize );
+                    
+                    if ( newImg -> planes == NULL ) 
+                    {
+                        printf ( "CreateImage: could not allocate %d bytes\n", dataSize );
+                        status = STATUS_FAIL;
+                    }
+                    else 
+                    {   
+                        memset ( newImg -> planes, 0, dataSize );
+                        newImg -> format = format;
+                        newImg -> bpp = bpp;
+                        newImg -> width = width;
+                        newImg -> height = height;
+                        *img = newImg;
+
+                        //status = STATUS_OK;
+                    }
                 }
             }
         }
@@ -171,4 +165,19 @@ void DestroyImage (
     }
 }
 
-    
+void CropImage (
+    IN UInt32 height,
+    IN UInt32 width,
+    IN UInt32 x,
+    IN UInt32 y, 
+    IN OUT Image* img )
+{
+    Image crop;
+    crop.height = height;
+    crop.width = width;
+    crop.format = img -> format;
+    crop.bpp = img -> bpp;
+    crop.planes[0] -> stride = img -> planes[0] -> stride;
+    crop.planes[0] -> data = img -> planes[0] -> data + y * img -> planes[0] -> stride + x;
+    *img = crop;
+}

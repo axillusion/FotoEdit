@@ -14,7 +14,7 @@ typedef struct Image
 {
     UInt32 width;
     UInt32 height;
-    ImgPlane planes[3];
+    ImgPlane* planes[3];
     UInt8 bpp;
     UInt8 format;
     
@@ -29,5 +29,12 @@ Int32 CreateImage(
     
 void DestroyImage(
     IN OUT Image** img);
+
+void CropImage (
+    IN UInt32 height,
+    IN UInt32 width,
+    IN UInt32 x,
+    IN UInt32 y, 
+    IN OUT Image* img );
     
 #endif /* IMAGE_H_INCLUDED */
