@@ -99,19 +99,20 @@ Int32 main ( Int32 argc, char* argv[] ) {
     
     Image img;
     
-    FILE* fin = fopen ( "video.in", "r" );
+    FILE* fin = fopen ( "video.in", "rb" );
 
 
     Int32 imgFormat = IMG_GRAY;
     CreateImage ( imgFormat, 8, IMG_WIDTH, IMG_HEIGHT, &img );
 
-    FILE* fout = fopen ( "video.out", "w" );
+    FILE* fout = fopen ( "video.out", "wb" );
 
     while ( GetImage ( &img, fin ) == IMG_WIDTH * IMG_HEIGHT ) {
         ConvertImage ( &img );
         PrintImage ( &img, fout );
-        DestroyImage ( &img );
     }
+
+    DestroyImage ( &img );
 
     fclose ( fin );
     fclose ( fout );

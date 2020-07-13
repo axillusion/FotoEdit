@@ -61,6 +61,25 @@ offset y = 2
 UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 */
 
+UInt32 GetPlaneSize(UInt8 format, UInt8 plane)
+{
+    switch(format)
+    {
+        ...
+    }
+}
+
+
+buffer = malloc[Image, ImagePlane, Data, ]
+
+newImg = buffer + 0;
+newImg -> planes[0] = buffer + sizeof(Image);
+newImg -> planes[0]->data = buffer + sizeof(Image) + sizeof(ImagePlane);
+newImg -> planes[1] = newImg -> planes[0]->data + dataSize;
+newImg -> planes[1]->data = newImg -> planes[1] + sizeof(ImagePlane);
+...
+
+
 Int32 CreateImage(
     IN UInt8 format,
     IN UInt8 bpp,
