@@ -5,10 +5,6 @@
 #define IMG_RGB 2
 #define IMG_YUV 3
 
-
-
-
-
 typedef struct ImgPlane {
     UInt8* data;
     UInt32 stride;
@@ -40,5 +36,9 @@ void CropImage (
     IN UInt32 x,
     IN UInt32 y, 
     IN OUT Image* img );
+
+UInt32 GetPlaneSize ( UInt8 format, UInt8 plane );
+
+UInt32 GetNrPlanes ( UInt8 format );
     
 #endif /* IMAGE_H_INCLUDED */
