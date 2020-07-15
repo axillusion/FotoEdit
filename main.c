@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 #include "Macros.h"
 #include "Image.h"
@@ -97,19 +99,24 @@ img = 0
 */
 Int32 main ( Int32 argc, char* argv[] ) {
     
-    Image img;
+    Image* img;
     
     FILE* fin = fopen ( "video.in", "rb" );
 
 
-    Int32 imgFormat = IMG_GRAY;
-    CreateImage ( imgFormat, 8, IMG_WIDTH, IMG_HEIGHT, &img );
+    Int32 status;
+    status = CreateImage (IMG_GRAY, 8, IMG_WIDTH, IMG_HEIGHT, &img );
+
+    if (status != STATUS_OK)
+    {
+        printf("CreateImage failed with status %d", status);
+    }
 
     FILE* fout = fopen ( "video.out", "wb" );
 
-    while ( GetImage ( &img, fin ) == IMG_WIDTH * IMG_HEIGHT ) {
-        ConvertImage ( &img );
-        PrintImage ( &img, fout );
+    while ( GetImage ( img, fin ) == IMG_WIDTH * IMG_HEIGHT ) {
+        ConvertImage ( img );
+        PrintImage ( img, fout );
     }
 
     DestroyImage ( &img );

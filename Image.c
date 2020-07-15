@@ -61,33 +61,130 @@ offset y = 2
 UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 */
 
-UInt32 GetPlaneSize(UInt8 format, UInt8 plane)
+/*------------------------------------------------------------------------------
+ * GetPlaneSize
+ *----------------------------------------------------------------------------*/
+Int32 GetPlaneSize(
+    IN UInt8 format,
+    IN UInt32 width,
+    IN UInt32 height,
+    IN UInt8 plane,
+    OUT UInt32* planeSize)
 {
- 
+    Int32 status;
+    
+    if(planeSize == NULL)
+    {
+        printf("GetPlaneSize: invalid argument\n");
+        status = STATUS_FAIL;
+    }
+    else if(plane == 0)
+    {
+        printf("GetPlaneSize: invalid plane number\n");
+        status = STATUS_FAIL;
+    }
+    else
+    {
+        status = STATUS_OK;
+        
+        switch ( format ) 
+        {
+            case IMG_GRAY :
+            {
+                if(plane > 1)
+                {
+                    printf("GetPlaneSize: invalid plane number\n");
+                    status = STATUS_FAIL;
+                }
+                else
+                {
+                    *planeSize = width * height;
+                }
+                break;
+            }
+            case IMG_RGB :
+            {
+                if(plane > 3)
+                {
+                    printf("GetPlaneSize: invalid plane number\n");
+                    status = STATUS_FAIL;
+                }
+                else
+                {
+                    *planeSize = width * height;
+                }
+                break;
+            }
+            case IMG_YUV :
+            {
+                if(plane > 3)
+                {
+                    printf("GetPlaneSize: invalid plane number\n");
+                    status = STATUS_FAIL;
+                }
+                else
+                {
+                    if(plane == 1)
+                    {
+                        *planeSize = width * height;
+                    }
+                    else
+                    {
+                        *planeSize = (width * height) / 4;
+                    }
+                }
+                break;
+            }
+            default : 
+            {
+                printf("GetPlaneSize: invalid formatr\n");
+                status = STATUS_FAIL;
+                break;
+            }
+        }
+    }
+    
+    return status;
 }
 
-UInt32 GetNrPlanes ( UInt8 format )
+/*------------------------------------------------------------------------------
+ * GetNrPlanes
+ *----------------------------------------------------------------------------*/
+Int32 GetNrPlanes (
+    IN UInt8 format,
+    OUT UInt8* numPlanes)
 {
-
-    UInt32 nrPlanes;
-
-    switch ( format ) 
+    Int32 status;
+    
+    if(numPlanes == 0)
     {
-        case IMG_GRAY :
-            nrPlanes = 1;
-            break;
-        case IMG_RGB :
-            nrPlanes = 3;
-            break;
-        case IMG_YUV :
-            nrPlanes = 2;
-            break;
-        default : 
-            nrPlanes = 0;
-            break;
+        status = STATUS_FAIL;
+    }
+    else
+    {
+        status = STATUS_OK;
+        switch ( format ) 
+        {
+            case IMG_GRAY :
+                *numPlanes = 1;
+                break;
+            case IMG_RGB :
+                *numPlanes = 3;
+                break;
+            case IMG_YUV :
+                *numPlanes = 2;
+                break;
+            default :
+            {
+                printf("GetNrPlanes: invalid format\n");
+                status = STATUS_FAIL;
+                *numPlanes = 0;
+                break;
+            }
+        }
     }
 
-    return nrPlanes;
+    return status;
 }
 
 /*
@@ -102,7 +199,9 @@ newImg -> planes[1]->data = newImg -> planes[1] + sizeof(ImagePlane);
 */
 
 
-
+/*------------------------------------------------------------------------------
+ * CreateImage
+ *----------------------------------------------------------------------------*/
 Int32 CreateImage(
     IN UInt8 format,
     IN UInt8 bpp,
@@ -110,70 +209,99 @@ Int32 CreateImage(
     IN UInt32 height,
     OUT Image** img)
 {
-    Int32 status = STATUS_OK;
+    Int32 status;
+    Image* newImg = NULL;
+    UInt8 nrPlanes = 0;
 
     if ( img == NULL ) 
     {
         printf ( "CreateImage: invalid pointer!\n" );
         status = STATUS_FAIL;
     } 
-
-    Image* newImg;
-
-    if ( status != STATUS_FAIL )
+    else
     {
         newImg = malloc ( sizeof ( Image ) );
+
         if ( newImg == NULL )
         {
             printf ( "CreateImage: Failed to allocate %u bytes", sizeof ( Image ) );
             status = STATUS_FAIL;
         }
-        newImg -> width = width;
-        newImg -> height = height;
-        newImg -> format = format;
-        newImg -> bpp = bpp;
-    }
-
-    UInt32 nrPlanes;
-
-    if ( status != STATUS_FAIL )
-    {
-        nrPlanes = GetNrPlanes ( format );
-        if ( nrPlanes == 0 ) 
+        else
         {
-            printf ( "CreateImage: Invalid image format" );
-            status = STATUS_FAIL;
+            memset(newImg, 0, sizeof(Image));
+
+            newImg->width = width;
+            newImg->height = height;
+            newImg->format = format;
+            newImg->bpp = bpp;
+
+            status = STATUS_OK;
         }
     }
 
-    if ( status != STATUS_FAIL ) 
+    if ( status == STATUS_OK )
     {
-        UInt32 plane;
+        status = GetNrPlanes ( format, &nrPlanes);
+    }
 
-        for ( plane = 0; plane < nrPlanes; ++plane ) 
+    if ( status == STATUS_OK ) 
+    {
+        UInt8 plane;
+        UInt32 planeSize = 0;
+
+        for ( plane = 0; ((plane < nrPlanes) && (status == STATUS_OK)); ++plane ) 
         {
-            newImg -> planes[plane].data = malloc ( GetPlaneSize ( format, plane ) );
-            if ( newImg -> planes[plane].data == NULL ) 
+            status = GetPlaneSize(format, width, height, plane + 1, &planeSize);
+
+            if (status == STATUS_OK)
             {
-                printf ( "CreateImage: could not allocate plane\n" );
-                status = STATUS_FAIL;
+                newImg->planes[plane].data = malloc(planeSize);
+
+                if (newImg->planes[plane].data == NULL)
+                {
+                    printf("CreateImage: could not allocate plane\n");
+                    status = STATUS_FAIL;
+                }
             }
         }
+    }
+
+    if (status == STATUS_OK)
+    {
+        *img = newImg;
     }
     
     return status;
 }
 
+/*------------------------------------------------------------------------------
+ * DestroyImage
+ *----------------------------------------------------------------------------*/
 void DestroyImage (
     IN OUT Image** img ) 
 {
-    if ( img != NULL ) 
-    {   
-        free ( ( *img )-> planes ) ;
-        free ( *img );
+    if (img != NULL && *img != NULL) 
+    {
+        Int32 plane;
+
+        for (plane = 0; plane < MAX_NUM_PLANES; ++plane)
+        {
+            if ((*img)->planes[plane].data != NULL)
+            {
+                free((*img)->planes[plane].data);
+            }
+        }
+
+        free(*img);
+
+        *img = NULL;
     }
 }
 
+/*------------------------------------------------------------------------------
+ * CropImage
+ *----------------------------------------------------------------------------*/
 void CropImage (
     IN UInt32 height,
     IN UInt32 width,
