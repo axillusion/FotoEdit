@@ -8,17 +8,25 @@
 #define STATUS_READ 0
 #define STATUS_EMPTY_IMG -1
 #define STATUS_NOT_EMPTY_IMG 0
+#define STATUS_UNALLOCATED_IMG -2
 
 int GetImage ( Image* img, FILE* file ) 
 { 
-    Int32 chread = fread ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
-
     Int32 readStatus;
-    if ( chread != IMG_HEIGHT * IMG_WIDTH )
-        readStatus = STATUS_NOT_READ;
-    else 
-        readStatus = STATUS_READ;
 
+    if ( img->planes == NULL )
+    {
+        readStatus = STATUS_UNALLOCATED_IMG;
+        printf ( "GetImage: unalocated image\n" );
+    }
+    else
+    {
+        Int32 chread = fread ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
+        if ( chread != IMG_HEIGHT * IMG_WIDTH )
+            readStatus = STATUS_NOT_READ;
+        else 
+            readStatus = STATUS_READ;
+    }
     return readStatus;
 }
 
@@ -107,14 +115,14 @@ Int32 main ( Int32 argc, char* argv[] ) {
     Int32 status;
     status = CreateImage (IMG_GRAY, 8, IMG_WIDTH, IMG_HEIGHT, &img );
 
-    if (status != STATUS_OK)
+    if (status != STATUS_OK )
     {
         printf("CreateImage failed with status %d", status);
     }
 
     FILE* fout = fopen ( "video.out", "wb" );
 
-    while ( GetImage ( img, fin ) == IMG_WIDTH * IMG_HEIGHT ) {
+    while ( GetImage ( img, fin ) == STATUS_READ ) {
         ConvertImage ( img );
         PrintImage ( img, fout );
     }

@@ -318,3 +318,31 @@ void CropImage (
     crop.planes[0].data = img -> planes[0].data + y * img -> planes[0].stride + x;
     *img = crop;
 }
+
+/*------------------------------------------------------------------------------
+ * ConvertRGBtoGray
+ *----------------------------------------------------------------------------*/
+
+void Convert_RGB_to_GRAY ( 
+    IN OUT Image* img)
+{
+
+    if ( img->planes[0].data == NULL )
+    {
+        printf ( "Convert_RGB_to_GRAY: empty image\n" );
+    }
+    else 
+    {
+        ImgPlane newPlane;
+        newPlane.data = malloc ( img->width * img->height );
+        newPlane.stride = img->planes[0].stride;
+
+        UInt32 i;
+
+        for ( i = 0; i < img->width * img->height; ++i )
+        {
+            newPlane.data[i] = 0.3 * img->planes[0].data[i] + 0.59 * img->planes[1].data[i] + 0.11 * img->planes[2].data[i];
+        }
+        img->planes[0] = newPlane;
+    }
+}

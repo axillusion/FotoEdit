@@ -49,5 +49,8 @@ Int32 GetPlaneSize(
 Int32 GetNrPlanes(
     IN UInt8 format,
     OUT UInt8* numPlanes);
+
+void Convert_RGB_to_GRAY ( 
+    IN OUT Image* img);
     
 #endif /* IMAGE_H_INCLUDED */
