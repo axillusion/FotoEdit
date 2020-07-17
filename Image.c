@@ -302,30 +302,39 @@ void DestroyImage (
 /*------------------------------------------------------------------------------
  * CropImage
  *----------------------------------------------------------------------------*/
-void CropImage (
-    IN UInt32 height,
-    IN UInt32 width,
-    IN UInt32 x,
-    IN UInt32 y, 
-    IN OUT Image* img )
+Int32 CropImage (
+    IN const Image* img,
+    IN UInt32 cropWidth,
+    IN UInt32 cropHeight,
+    IN UInt32 offsetX,
+    IN UInt32 offsetY, 
+    OUT Image* crop )
 {
-    Image crop;
-    crop.height = height;
-    crop.width = width;
-    crop.format = img -> format;
-    crop.bpp = img -> bpp;
-    crop.planes[0].stride = img -> planes[0].stride;
-    crop.planes[0].data = img -> planes[0].data + y * img -> planes[0].stride + x;
-    *img = crop;
+    // nu putem folosi inplace crop-ul pentru ca pierdem pointerii alocati initial
+
+    crop->height = height;
+    crop->width = width;
+    crop->format = img -> format;
+    crop->bpp = img -> bpp;
+    crop->planes[0].stride = img -> planes[0].stride;
+    crop->planes[0].data = img -> planes[0].data + y * img -> planes[0].stride + x;
 }
 
 /*------------------------------------------------------------------------------
  * ConvertRGBtoGray
  *----------------------------------------------------------------------------*/
 
-void Convert_RGB_to_GRAY ( 
-    IN OUT Image* img)
+Int32 Convert_RGB_to_GRAY ( 
+    IN const Image* src,
+    OUT Image* dst)
 {
+    // daca src sau dst sunt null error
+    // daca src nu e rgb error
+    // faca src->planes[0], [1], [2] nu e allocat error
+    // daca dst nu e format gray error
+    // daca dst nu are acelasi size cu src error
+    // daca dst->planes[] nu e alocat error
+
 
     if ( img->planes[0].data == NULL )
     {
@@ -334,15 +343,22 @@ void Convert_RGB_to_GRAY (
     else 
     {
         ImgPlane newPlane;
-        newPlane.data = malloc ( img->width * img->height );
-        newPlane.stride = img->planes[0].stride;
+
+        Int32 stride = img->width;
+        newPlane.data = malloc ( stride * img->height );
+        newPlane.stride = stride;
+
 
         UInt32 i;
 
         for ( i = 0; i < img->width * img->height; ++i )
         {
+            UInt32 pos = ? ;
+
             newPlane.data[i] = 0.3 * img->planes[0].data[i] + 0.59 * img->planes[1].data[i] + 0.11 * img->planes[2].data[i];
         }
+
+        free(img->planes[0]);
         img->planes[0] = newPlane;
     }
 }

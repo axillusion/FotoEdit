@@ -10,18 +10,32 @@
 #define STATUS_NOT_EMPTY_IMG 0
 #define STATUS_UNALLOCATED_IMG -2
 
+
 int GetImage ( Image* img, FILE* file ) 
 { 
     Int32 readStatus;
 
-    if ( img->planes == NULL )
+    if (img == NULL)
     {
         readStatus = STATUS_UNALLOCATED_IMG;
-        printf ( "GetImage: unalocated image\n" );
+        printf("GetImage: unalocated image\n");
+    }
+    else if ( img->planes == NULL )
+    {
+        readStatus = STATUS_UNALLOCATED_IMG;
+        printf ( "GetImage: unalocated plane\n" );
+    }
+    else if (file == NULL)
+    {
+        readStatus = STATUS_UNALLOCATED_IMG;
+        printf("GetImage: invalid file descriptor\n");
     }
     else
     {
-        Int32 chread = fread ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
+        // incomplet, nu se tine cont de formatul imaginii si de bpp
+
+        Int32 chread = fread ( &img -> planes, img -> bpp, img->width * img->height, file );
+
         if ( chread != IMG_HEIGHT * IMG_WIDTH )
             readStatus = STATUS_NOT_READ;
         else 
