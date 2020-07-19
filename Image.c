@@ -312,12 +312,12 @@ Int32 CropImage (
 {
     // nu putem folosi inplace crop-ul pentru ca pierdem pointerii alocati initial
 
-    crop->height = height;
-    crop->width = width;
+    crop->height = cropHeight;
+    crop->width = cropWidth;
     crop->format = img -> format;
     crop->bpp = img -> bpp;
     crop->planes[0].stride = img -> planes[0].stride;
-    crop->planes[0].data = img -> planes[0].data + y * img -> planes[0].stride + x;
+    crop->planes[0].data = img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
 }
 
 /*------------------------------------------------------------------------------
@@ -335,30 +335,80 @@ Int32 Convert_RGB_to_GRAY (
     // daca dst nu are acelasi size cu src error
     // daca dst->planes[] nu e alocat error
 
+    Int8 status = STATUS_OK;
 
-    if ( img->planes[0].data == NULL )
+    if ( src == NULL ) 
     {
-        printf ( "Convert_RGB_to_GRAY: empty image\n" );
+        printf ( "ConvertRGBtoGray: Unnalocated source image\n" );
+        status = STATUS_FAIL;
     }
-    else 
+
+    if ( status == STATUS_OK ) 
     {
-        ImgPlane newPlane;
-
-        Int32 stride = img->width;
-        newPlane.data = malloc ( stride * img->height );
-        newPlane.stride = stride;
-
-
-        UInt32 i;
-
-        for ( i = 0; i < img->width * img->height; ++i )
+        if ( src->format != IMG_RGB )
         {
-            UInt32 pos = ? ;
-
-            newPlane.data[i] = 0.3 * img->planes[0].data[i] + 0.59 * img->planes[1].data[i] + 0.11 * img->planes[2].data[i];
+            printf ( "ConvertRGBtoGray: Wrong source image format\n" );
+            status = STATUS_FAIL;
         }
-
-        free(img->planes[0]);
-        img->planes[0] = newPlane;
     }
+
+    if ( status == STATUS_OK ) 
+    {
+        Int32 plane;
+        for ( plane = 0; plane < 3 && status == STATUS_OK; ++plane )
+        {
+            if ( src->planes[plane].data == NULL )
+            {
+                printf ( "ConvertRGBtoGray: Unallocated source image plane\n" );
+                status = STATUS_FAIL;
+            }
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        if ( dst == NULL ) 
+        {
+            printf ( "ConvertRGBtoGray: Unnalocated destination image\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK )
+    {
+        if ( ( dst->width != src->width ) || ( dst->height != src->height ) ) 
+        {
+            printf ( "ConvertRGBtoGray: different sizes\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        if ( dst->format != IMG_GRAY )
+        {
+            printf ( "ConvertRGBtoGray: Wrong destination image format\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        if ( dst->planes[0].data == NULL )
+        {
+            printf ( "ConvertRGBtoGray: Unnalocated destination image plane\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        int i;
+        for ( i = 0; i < dst->height * dst->height; ++i )
+        {
+            dst->planes[0].data[i] = src->planes[0].data[i] * 0.3 + src->planes[1].data[i] * 0.59 + src->planes[2].data[i] * 0.11;
+        }
+    }
+
+    return status;
 }

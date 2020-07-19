@@ -32,12 +32,13 @@ Int32 CreateImage(
 void DestroyImage(
     IN OUT Image** img);
 
-void CropImage (
-    IN UInt32 height,
-    IN UInt32 width,
-    IN UInt32 x,
-    IN UInt32 y, 
-    IN OUT Image* img );
+Int32 CropImage (
+    IN const Image* img,
+    IN UInt32 cropWidth,
+    IN UInt32 cropHeight,
+    IN UInt32 offsetX,
+    IN UInt32 offsetY, 
+    OUT Image* crop );
 
 Int32 GetPlaneSize(
     IN UInt8 format,
@@ -50,7 +51,8 @@ Int32 GetNrPlanes(
     IN UInt8 format,
     OUT UInt8* numPlanes);
 
-void Convert_RGB_to_GRAY ( 
-    IN OUT Image* img);
+Int32 Convert_RGB_to_GRAY ( 
+    IN const Image* src,
+    OUT Image* dst);
     
 #endif /* IMAGE_H_INCLUDED */

@@ -13,7 +13,7 @@
 
 int GetImage ( Image* img, FILE* file ) 
 { 
-    Int32 readStatus;
+    Int32 readStatus = STATUS_OK;
 
     if (img == NULL)
     {
@@ -34,12 +34,35 @@ int GetImage ( Image* img, FILE* file )
     {
         // incomplet, nu se tine cont de formatul imaginii si de bpp
 
-        Int32 chread = fread ( &img -> planes, img -> bpp, img->width * img->height, file );
+        Int32 dataSize;
+        
+        switch ( img->format ) 
+        {
+            case IMG_GRAY :
+                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 );
+                break;
+            case IMG_RGB :
+                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 ) * 3;
+                break;
+            case IMG_YUV :
+                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 ) * 2;
+                break;
+            default :
+                dataSize = 0;
+                printf ( "GetImage: Invalid image format\n" );
+                readStatus = STATUS_NOT_READ;
+                break;
+        }
 
-        if ( chread != IMG_HEIGHT * IMG_WIDTH )
-            readStatus = STATUS_NOT_READ;
-        else 
-            readStatus = STATUS_READ;
+        if ( readStatus == STATUS_OK )
+        {
+            Int32 chread = fread ( &img -> planes, img -> bpp, dataSize, file );
+
+            if ( chread != dataSize )
+            {
+                readStatus = STATUS_NOT_READ;
+            }
+        }
     }
     return readStatus;
 }
