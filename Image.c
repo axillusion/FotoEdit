@@ -61,6 +61,33 @@ offset y = 2
 UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 */
 
+// VGA 640x480  aspect ratio 4:3
+// HD 1920x1080 aspect ratio 6:9
+
+
+
+/*------------------------------------------------------------------------------
+ * CheckImage
+ *----------------------------------------------------------------------------*/
+Int32 CheckImage(
+    IN Image* img,
+    IN UInt32 requiredWidth,
+    IN UInt32 requiredHeight,
+    IN UInt8 requiredFormat)
+{
+    // implementarea
+}
+
+/*------------------------------------------------------------------------------
+ * GetImageSize
+ *----------------------------------------------------------------------------*/
+Int32 GetImageSize(
+    IN Image* img,
+    OUT UInt32* size)
+{
+    // implementarea
+}
+
 /*------------------------------------------------------------------------------
  * GetPlaneSize
  *----------------------------------------------------------------------------*/
@@ -220,11 +247,12 @@ Int32 CreateImage(
     } 
     else
     {
-        newImg = malloc ( sizeof ( Image ) );
+        UInt32 size = (UInt32)sizeof(Image);
+        newImg = malloc ( size );
 
         if ( newImg == NULL )
         {
-            printf ( "CreateImage: Failed to allocate %u bytes", sizeof ( Image ) );
+            printf ( "CreateImage: Failed to allocate %u bytes", size );
             status = STATUS_FAIL;
         }
         else
@@ -310,7 +338,7 @@ Int32 CropImage (
     IN UInt32 offsetY, 
     OUT Image* crop )
 {
-    // nu putem folosi inplace crop-ul pentru ca pierdem pointerii alocati initial
+    // vrrifica parametri de intare si iesire si intoarce status
 
     crop->height = cropHeight;
     crop->width = cropWidth;
@@ -328,12 +356,7 @@ Int32 Convert_RGB_to_GRAY (
     IN const Image* src,
     OUT Image* dst)
 {
-    // daca src sau dst sunt null error
-    // daca src nu e rgb error
-    // faca src->planes[0], [1], [2] nu e allocat error
-    // daca dst nu e format gray error
-    // daca dst nu are acelasi size cu src error
-    // daca dst->planes[] nu e alocat error
+    // tine cont de stride si la dst si la src
 
     Int8 status = STATUS_OK;
 
@@ -403,10 +426,11 @@ Int32 Convert_RGB_to_GRAY (
 
     if ( status == STATUS_OK ) 
     {
-        int i;
+        UInt32 i;
         for ( i = 0; i < dst->height * dst->height; ++i )
         {
-            dst->planes[0].data[i] = src->planes[0].data[i] * 0.3 + src->planes[1].data[i] * 0.59 + src->planes[2].data[i] * 0.11;
+            dst->planes[0].data[i] = (UInt8)(src->planes[0].data[i] * 0.3 + src->planes[1].data[i] * 0.59 + src->planes[2].data[i] * 0.11);
+
         }
     }
 

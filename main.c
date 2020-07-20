@@ -56,7 +56,7 @@ int GetImage ( Image* img, FILE* file )
 
         if ( readStatus == STATUS_OK )
         {
-            Int32 chread = fread ( &img -> planes, img -> bpp, dataSize, file );
+            size_t chread = fread ( &img -> planes, img -> bpp, dataSize, file );
 
             if ( chread != dataSize )
             {
@@ -142,6 +142,13 @@ main = 0x10
 img = 0
 
 */
+
+
+// verifica argumetele de intrare si tine cont de ele cand creem imaginea de intrare si imaginea de iesire
+
+// Usage:
+// -i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path> help
+
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;

@@ -1,6 +1,7 @@
 .vs/*
 x64/*
 *.db
+Debug/*
 
 # Prerequisites
 *.d
