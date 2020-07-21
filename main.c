@@ -36,23 +36,7 @@ int GetImage ( Image* img, FILE* file )
 
         Int32 dataSize;
         
-        switch ( img->format ) 
-        {
-            case IMG_GRAY :
-                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 );
-                break;
-            case IMG_RGB :
-                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 ) * 3;
-                break;
-            case IMG_YUV :
-                dataSize = img->width * img->height *  ( ( img->bpp + 7 ) >> 3 ) * 2;
-                break;
-            default :
-                dataSize = 0;
-                printf ( "GetImage: Invalid image format\n" );
-                readStatus = STATUS_NOT_READ;
-                break;
-        }
+        readStatus = GetImageSize ( img, &dataSize );
 
         if ( readStatus == STATUS_OK )
         {
@@ -152,12 +136,25 @@ img = 0
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;
+
+    char* path;
+    Int32 i;
+    Int32 width;
+    Int32 height;
+    UInt8 format;
+    Int32 bpp;
+
+    for ( i = 1; i < argc; ++i )
+    {
+        switch ( *argv[i] ) 
+        {
+        }
+    }
+
+    FILE* fin = fopen ( path, "rb" );
     
-    FILE* fin = fopen ( "video.in", "rb" );
-
-
     Int32 status;
-    status = CreateImage (IMG_GRAY, 8, IMG_WIDTH, IMG_HEIGHT, &img );
+    status = CreateImage ( format, bpp, width, height, &img );
 
     if (status != STATUS_OK )
     {

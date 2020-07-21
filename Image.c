@@ -75,7 +75,49 @@ Int32 CheckImage(
     IN UInt32 requiredHeight,
     IN UInt8 requiredFormat)
 {
-    // implementarea
+    Int32 status = STATUS_OK;
+
+    if ( img == NULL ) 
+    {
+        printf ( "CheckImage: Unnalocated image\n" );
+        status = STATUS_FAIL;
+    } 
+
+    if ( status == STATUS_OK ) 
+    {
+        if ( img->format != requiredFormat )
+        {
+            printf ( "CheckImage: Not the required format\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        if ( ( img->width != requiredWidth ) || ( img->height != requiredHeight ) )
+        {
+            printf ( "CheckImage: Not the required dimensions\n" );
+            status = STATUS_FAIL;
+        }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        Int32 plane;
+        Int32 planes;
+        GetNrPlanes ( img->format, &planes );
+        for ( plane = 0; plane < planes && status == STATUS_OK; ++plane ) 
+        {
+            if ( img->planes[plane].data == NULL )
+            {
+                printf ( "CheckImage: Unallocated image plane\n" );
+                status = STATUS_FAIL;
+            }
+
+        }
+    }
+
+    return status;
 }
 
 /*------------------------------------------------------------------------------
@@ -85,7 +127,25 @@ Int32 GetImageSize(
     IN Image* img,
     OUT UInt32* size)
 {
-    // implementarea
+    Int32 status = STATUS_OK;
+    if ( img == NULL ) 
+    {
+        printf ( "GetImageSize: unallocated image" );
+        status = STATUS_FAIL;
+    }
+    else
+    {
+        Int32 planes = 1<<2;
+        GetNrPlanes ( img->format, &planes);
+        Int32 planeSize;
+        Int32 plane;
+        for ( plane = 0; plane < planes; ++plane ) 
+        {
+            GetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
+            size += planeSize;
+        }
+    }
+    return status;
 }
 
 /*------------------------------------------------------------------------------
@@ -340,12 +400,23 @@ Int32 CropImage (
 {
     // vrrifica parametri de intare si iesire si intoarce status
 
-    crop->height = cropHeight;
-    crop->width = cropWidth;
-    crop->format = img -> format;
-    crop->bpp = img -> bpp;
-    crop->planes[0].stride = img -> planes[0].stride;
-    crop->planes[0].data = img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
+    Int32 status = STATUS_OK;
+    status = CheckImage ( img, img->width, img->height, img->format );
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( crop, crop->width, crop->height, crop->format );
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        crop->height = cropHeight;
+        crop->width = cropWidth;
+        crop->format = img -> format;
+        crop->bpp = img -> bpp;
+        crop->planes[0].stride = img -> planes[0].stride;
+        crop->planes[0].data = img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
+    }
+    return status;
 }
 
 /*------------------------------------------------------------------------------
@@ -358,79 +429,29 @@ Int32 Convert_RGB_to_GRAY (
 {
     // tine cont de stride si la dst si la src
 
-    Int8 status = STATUS_OK;
+    Int8 status = STATUS_OK;    
 
-    if ( src == NULL ) 
+    status = CheckImage ( src, src->width, src->height, IMG_RGB );
+
+    if ( status == STATUS_OK ) 
     {
-        printf ( "ConvertRGBtoGray: Unnalocated source image\n" );
-        status = STATUS_FAIL;
+        status = CheckImage ( dst, src->width, src->height, IMG_GRAY );
     }
 
     if ( status == STATUS_OK ) 
     {
-        if ( src->format != IMG_RGB )
-        {
-            printf ( "ConvertRGBtoGray: Wrong source image format\n" );
-            status = STATUS_FAIL;
-        }
-    }
+        UInt32 indexSrc = 0;
+        UInt32 indexDst = 0;
+        UInt32 step;
 
-    if ( status == STATUS_OK ) 
-    {
-        Int32 plane;
-        for ( plane = 0; plane < 3 && status == STATUS_OK; ++plane )
+        for ( step = 0; step < src->width * src->height; ++step ) 
         {
-            if ( src->planes[plane].data == NULL )
+            if ( step % src->width == 0 )
             {
-                printf ( "ConvertRGBtoGray: Unallocated source image plane\n" );
-                status = STATUS_FAIL;
+                indexSrc += src->planes[0].stride - src->width;
+                indexDst += dst->planes[0].stride - src->width;
             }
-        }
-    }
-
-    if ( status == STATUS_OK ) 
-    {
-        if ( dst == NULL ) 
-        {
-            printf ( "ConvertRGBtoGray: Unnalocated destination image\n" );
-            status = STATUS_FAIL;
-        }
-    }
-
-    if ( status == STATUS_OK )
-    {
-        if ( ( dst->width != src->width ) || ( dst->height != src->height ) ) 
-        {
-            printf ( "ConvertRGBtoGray: different sizes\n" );
-            status = STATUS_FAIL;
-        }
-    }
-
-    if ( status == STATUS_OK ) 
-    {
-        if ( dst->format != IMG_GRAY )
-        {
-            printf ( "ConvertRGBtoGray: Wrong destination image format\n" );
-            status = STATUS_FAIL;
-        }
-    }
-
-    if ( status == STATUS_OK ) 
-    {
-        if ( dst->planes[0].data == NULL )
-        {
-            printf ( "ConvertRGBtoGray: Unnalocated destination image plane\n" );
-            status = STATUS_FAIL;
-        }
-    }
-
-    if ( status == STATUS_OK ) 
-    {
-        UInt32 i;
-        for ( i = 0; i < dst->height * dst->height; ++i )
-        {
-            dst->planes[0].data[i] = (UInt8)(src->planes[0].data[i] * 0.3 + src->planes[1].data[i] * 0.59 + src->planes[2].data[i] * 0.11);
-
+            dst->planes[0].data[indexDst] = ( src->planes[0].data[indexSrc] + src->planes[1].data[indexSrc] + src->planes[2].data[indexSrc] ) / 3;
         }
     }
 

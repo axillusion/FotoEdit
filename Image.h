@@ -55,4 +55,14 @@ Int32 Convert_RGB_to_GRAY (
     IN const Image* src,
     OUT Image* dst);
     
+Int32 GetImageSize(
+    IN Image* img,
+    OUT UInt32* size);
+
+Int32 CheckImage(
+    IN Image* img,
+    IN UInt32 requiredWidth,
+    IN UInt32 requiredHeight,
+    IN UInt8 requiredFormat);
+
 #endif /* IMAGE_H_INCLUDED */
