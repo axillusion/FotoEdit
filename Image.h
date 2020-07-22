@@ -60,7 +60,7 @@ Int32 GetImageSize(
     OUT UInt32* size);
 
 Int32 CheckImage(
-    IN Image* img,
+    IN const Image* img,
     IN UInt32 requiredWidth,
     IN UInt32 requiredHeight,
     IN UInt8 requiredFormat);

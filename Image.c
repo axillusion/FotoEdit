@@ -70,7 +70,7 @@ UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
  * CheckImage
  *----------------------------------------------------------------------------*/
 Int32 CheckImage(
-    IN Image* img,
+    IN const Image* img,
     IN UInt32 requiredWidth,
     IN UInt32 requiredHeight,
     IN UInt8 requiredFormat)
@@ -104,7 +104,7 @@ Int32 CheckImage(
     if ( status == STATUS_OK ) 
     {
         Int32 plane;
-        Int32 planes;
+        UInt8 planes = 0;
         GetNrPlanes ( img->format, &planes );
         for ( plane = 0; plane < planes && status == STATUS_OK; ++plane ) 
         {
@@ -128,17 +128,18 @@ Int32 GetImageSize(
     OUT UInt32* size)
 {
     Int32 status = STATUS_OK;
-    if ( img == NULL ) 
+    if ( img == NULL || size == NULL ) 
     {
-        printf ( "GetImageSize: unallocated image" );
+        printf ( "GetImageSize: invalid input argument" );
         status = STATUS_FAIL;
     }
     else
     {
-        Int32 planes = 1<<2;
-        GetNrPlanes ( img->format, &planes);
-        Int32 planeSize;
+        UInt8 planes = 0;
+        UInt32 planeSize = 0;
         Int32 plane;
+        GetNrPlanes ( img->format, &planes);
+        size = 0;
         for ( plane = 0; plane < planes; ++plane ) 
         {
             GetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
@@ -243,7 +244,7 @@ Int32 GetNrPlanes (
 {
     Int32 status;
     
-    if(numPlanes == 0)
+    if(numPlanes == NULL)
     {
         status = STATUS_FAIL;
     }

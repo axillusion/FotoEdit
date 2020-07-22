@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "Macros.h"
 #include "Image.h"
 
@@ -34,7 +35,7 @@ int GetImage ( Image* img, FILE* file )
     {
         // incomplet, nu se tine cont de formatul imaginii si de bpp
 
-        Int32 dataSize;
+        UInt32 dataSize;
         
         readStatus = GetImageSize ( img, &dataSize );
 
@@ -131,47 +132,103 @@ img = 0
 // verifica argumetele de intrare si tine cont de ele cand creem imaginea de intrare si imaginea de iesire
 
 // Usage:
-// -i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path> help
+// -i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path>
+
+void PrintUsage ( void ) 
+{
+    printf ( "Wrong usage\nUsage:\n-i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path>\n" );
+}
 
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;
 
-    char* path;
+    char* inputPath = NULL;
+    char* outputPath = NULL;
     Int32 i;
-    Int32 width;
-    Int32 height;
-    UInt8 format;
-    Int32 bpp;
+    Int32 width = 0;
+    Int32 height = 0;
+    UInt8 format = 0;
+    Int32 bpp = 0;
+    Int32 status = STATUS_OK;
 
-    for ( i = 1; i < argc; ++i )
+    if ( argc != 13 ) 
     {
-        switch ( *argv[i] ) 
+        PrintUsage();
+        status = STATUS_FAIL;
+    }
+    else
+    {
+        for ( i = 1; i < argc && status == STATUS_OK; i += 2 )
         {
+            const char* arg = argv[i];
+
+            if ( *arg == '-' && ( i + 1 ) < argc )  
+            {
+                ++arg;
+                switch ( *arg )
+                {
+                    case 'i' :
+                        inputPath = argv[i + 1];
+                        break;
+                    case 'f' :
+                        format = ( UInt8 ) atoi ( argv[i + 1] );
+                        break;
+                    case 'w' :
+                        width = atoi ( argv[i + 1] );
+                        break;
+                    case 'h' :
+                        height = atoi ( argv[i + 1] );
+                        break;
+                    case 'b' :
+                        bpp = atoi ( argv[i + 1] );
+                        break;
+                    case 'o' :
+                        outputPath = argv[i + 1];
+                        break;
+                    default : 
+                        PrintUsage();
+                        status = STATUS_FAIL;
+                }
+            } 
+            else
+            {
+                PrintUsage();
+                status = STATUS_FAIL;
+            } 
         }
     }
 
-    FILE* fin = fopen ( path, "rb" );
-    
-    Int32 status;
-    status = CreateImage ( format, bpp, width, height, &img );
-
-    if (status != STATUS_OK )
+    if ( status == STATUS_OK ) 
     {
-        printf("CreateImage failed with status %d", status);
+        FILE* fin = fopen ( inputPath, "rb" );
+        
+        Int32 status;
+        status = CreateImage ( format, bpp, width, height, &img );
+
+        if (status != STATUS_OK )
+        {
+            printf("CreateImage failed with status %d", status);
+        }
+
+        FILE* fout = fopen ( outputPath, "wb" );
+
+        while ( GetImage ( img, fin ) == STATUS_READ ) {
+            ConvertImage ( img );
+            PrintImage ( img, fout );
+        }
+
+        DestroyImage ( &img );
+
+        if ( fin != NULL )
+        {
+            fclose ( fin );
+        }
+        if ( fout != NULL )
+        {
+            fclose ( fout );
+        }
     }
 
-    FILE* fout = fopen ( "video.out", "wb" );
-
-    while ( GetImage ( img, fin ) == STATUS_READ ) {
-        ConvertImage ( img );
-        PrintImage ( img, fout );
-    }
-
-    DestroyImage ( &img );
-
-    fclose ( fin );
-    fclose ( fout );
-
-    return 0;
+    return status;
 }
