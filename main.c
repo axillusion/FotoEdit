@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include "Macros.h"
 #include "Image.h"
+#include "GenerateMovie.h"
 
 #define STATUS_NOT_READ -1
 #define STATUS_READ 0
 #define STATUS_EMPTY_IMG -1
 #define STATUS_NOT_EMPTY_IMG 0
 #define STATUS_UNALLOCATED_IMG -2
-
 
 int GetImage ( Image* img, FILE* file ) 
 { 
@@ -197,6 +197,11 @@ Int32 main ( Int32 argc, char* argv[] ) {
                 status = STATUS_FAIL;
             } 
         }
+    }
+
+    if ( status == STATUS_OK ) 
+    {
+        status = GenerateMovie ( width, height, 300, outputPath );
     }
 
     if ( status == STATUS_OK ) 

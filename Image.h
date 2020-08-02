@@ -8,7 +8,7 @@
 #define MAX_NUM_PLANES 3
 
 typedef struct ImgPlane {
-    UInt8* data;
+    void* data;
     UInt32 stride;
 } ImgPlane;
 
@@ -64,5 +64,9 @@ Int32 CheckImage(
     IN UInt32 requiredWidth,
     IN UInt32 requiredHeight,
     IN UInt8 requiredFormat);
+
+Int32 ClearImage (
+    IN OUT Image* img,
+    UInt32 color );
 
 #endif /* IMAGE_H_INCLUDED */

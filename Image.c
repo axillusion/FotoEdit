@@ -64,6 +64,32 @@ UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 // VGA 640x480  aspect ratio 4:3
 // HD 1920x1080 aspect ratio 6:9
 
+/*------------------------------------------------------------------------------
+ * ClearImage
+ *----------------------------------------------------------------------------*/
+Int32 ClearImage (
+    IN OUT Image* img,
+    UInt32 color )
+{
+
+    Int32 status = CheckImage ( img, img->width, img->height, IMG_GRAY );
+    
+    if ( status == STATUS_OK )
+    {
+        Int32 pos = 0;
+        Int32 i;
+        for ( i = 0; i < img->width * img->height; ++i ) 
+        {
+            //img->planes[0].data[pos] = color;
+            if ( pos % img->width == 0 ) 
+            {
+                pos += img->planes[0].stride - img->width;
+            }  
+        }
+    }
+
+    return STATUS_FAIL;
+}
 
 
 /*------------------------------------------------------------------------------
@@ -160,6 +186,8 @@ Int32 GetPlaneSize(
     OUT UInt32* planeSize)
 {
     Int32 status;
+
+    // sa tina cont de bpp
     
     if(planeSize == NULL)
     {
@@ -444,7 +472,10 @@ Int32 Convert_RGB_to_GRAY (
         UInt32 indexSrc = 0;
         UInt32 indexDst = 0;
         UInt32 step;
-
+        UInt8* r = src->planes[0].data;
+        UInt8* g = src->planes[1].data;
+        UInt8* b = src->planes[2].data;
+        UInt8* gray = dst->planes[0].data;
         for ( step = 0; step < src->width * src->height; ++step ) 
         {
             if ( step % src->width == 0 )
@@ -452,7 +483,7 @@ Int32 Convert_RGB_to_GRAY (
                 indexSrc += src->planes[0].stride - src->width;
                 indexDst += dst->planes[0].stride - src->width;
             }
-            dst->planes[0].data[indexDst] = ( src->planes[0].data[indexSrc] + src->planes[1].data[indexSrc] + src->planes[2].data[indexSrc] ) / 3;
+            gray[indexDst] = ( r[indexSrc] + g[indexSrc] + b[indexSrc] ) / 3;
         }
     }
 
