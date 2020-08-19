@@ -6,72 +6,71 @@
 #include "Image.h"
 #include "GenerateMovie.h"
 
-#define STATUS_NOT_READ -1
-#define STATUS_READ 0
-#define STATUS_EMPTY_IMG -1
-#define STATUS_NOT_EMPTY_IMG 0
-#define STATUS_UNALLOCATED_IMG -2
-
 int GetImage ( Image* img, FILE* file ) 
 { 
-    Int32 readStatus = STATUS_OK;
+    Int32 readStatus;
 
-    if (img == NULL)
+    if ( img == NULL || file == NULL )
     {
-        readStatus = STATUS_UNALLOCATED_IMG;
-        printf("GetImage: unalocated image\n");
+        readStatus = STATUS_FAIL;
+        printf("GetImage: invalid input argument\n");
+    } 
+    else 
+    {
+        readStatus = CheckImage ( img, img->width, img->height, img->format );
     }
-    else if ( img->planes == NULL )
-    {
-        readStatus = STATUS_UNALLOCATED_IMG;
-        printf ( "GetImage: unalocated plane\n" );
-    }
-    else if (file == NULL)
-    {
-        readStatus = STATUS_UNALLOCATED_IMG;
-        printf("GetImage: invalid file descriptor\n");
-    }
-    else
-    {
-        // incomplet, nu se tine cont de formatul imaginii si de bpp
 
+    if ( readStatus == STATUS_OK ) 
+    {
         UInt32 dataSize;
-        
-        readStatus = GetImageSize ( img, &dataSize );
+        size_t chread;
+        UInt8 numPlanes;
+        Int32 i, stride;
 
-        if ( readStatus == STATUS_OK )
+        numPlanes = GetNrPlanes ( img->format, &numPlanes );
+
+        for ( i = 0; i < numPlanes && readStatus == STATUS_OK; ++i )
         {
-            size_t chread = fread ( &img -> planes, img -> bpp, dataSize, file );
-
-            if ( chread != dataSize )
+            stride = img->planes[i].stride;
+            readStatus = GetPlaneSize ( img->format, img->width, img->height, i + 1, &dataSize );
+            if ( readStatus == STATUS_OK )
             {
-                readStatus = STATUS_NOT_READ;
+                if ( img->width == stride )
+                {
+                    chread = fread ( img -> planes[i].data, dataSize, 1, file );
+                    if ( chread != dataSize )
+                    {
+                        readStatus = STATUS_FAIL;
+                        printf ( "GetImage: Image not read\n" );
+                    }
+                } 
+                else
+                {
+                    Int32 y, height, width;
+                    height = img->height;
+                    width = img->width;
+                    if ( img->format == IMG_YUV && i > 0 )
+                    {
+                        height /= 2;
+                        width /= 2;
+                    }   
+
+                    for ( y = 0; y < height && readStatus == STATUS_OK; ++y)
+                    {
+                        chread = fread ( img->planes[i].data + stride * y, width, 1, file );
+
+                        if ( chread != dataSize )
+                        {
+                            readStatus = STATUS_FAIL;
+                            printf ( "GetImage: Image not read\n" );
+                        }
+                    }
+                }
+                
             }
         }
     }
     return readStatus;
-}
-
-void ConvertImage ( Image* img ) 
-{
-
-}
-
-Int32 PrintImage ( Image* img, FILE* file ) 
-{ 
-    Int32 status;
-
-    if ( img == NULL ) 
-    {
-        printf ( "PrintImage: Empty image\n" );
-        status = STATUS_EMPTY_IMG;
-    } 
-    else 
-    {
-        fwrite ( &img -> planes, img -> bpp, IMG_HEIGHT * IMG_WIDTH, file );
-        status = STATUS_NOT_EMPTY_IMG;
-    }
-    return status;
 }
 
 /*
@@ -142,6 +141,7 @@ void PrintUsage ( void )
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;
+    Image* outputImg;
 
     char* inputPath = NULL;
     char* outputPath = NULL;
@@ -151,6 +151,7 @@ Int32 main ( Int32 argc, char* argv[] ) {
     UInt8 format = 0;
     Int32 bpp = 0;
     Int32 status = STATUS_OK;
+    UInt8 outputFormat;
 
     if ( argc != 13 ) 
     {
@@ -201,7 +202,7 @@ Int32 main ( Int32 argc, char* argv[] ) {
 
     if ( status == STATUS_OK ) 
     {
-        status = GenerateMovie ( width, height, 300, outputPath );
+        status = GenerateMovie ( width, height, 300, inputPath );
     }
 
     if ( status == STATUS_OK ) 
@@ -218,12 +219,23 @@ Int32 main ( Int32 argc, char* argv[] ) {
 
         FILE* fout = fopen ( outputPath, "wb" );
 
-        while ( GetImage ( img, fin ) == STATUS_READ ) {
-            ConvertImage ( img );
-            PrintImage ( img, fout );
+        if ( status == STATUS_OK )
+        {
+            status = GetFormatFromPath ( outputPath, &outputFormat );
         }
 
-        DestroyImage ( &img );
+        if ( status == STATUS_OK )
+        {
+            status = CreateImage ( outputFormat, bpp, width, height, &outputImg );
+        }
+
+        while ( GetImage ( img, fin ) == STATUS_OK ) 
+        {
+            ConvertImage ( img, outputImg );
+            WriteImageToFile ( outputImg, fout );
+        }
+
+        /*DestroyImage ( &img );*/
 
         if ( fin != NULL )
         {

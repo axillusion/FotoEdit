@@ -1,11 +1,18 @@
 #ifndef IMAGE_H_INCLUDED
 #define IMAGE_H_INCLUDED
 
+#include "GenerateMovie.h"
+
 #define IMG_GRAY 1
 #define IMG_RGB 2
 #define IMG_YUV 3
 
 #define MAX_NUM_PLANES 3
+
+typedef struct Rectangle
+{
+    Int32 top, left, width, height;
+} Rectangle;
 
 typedef struct ImgPlane {
     void* data;
@@ -68,5 +75,9 @@ Int32 CheckImage(
 Int32 ClearImage (
     IN OUT Image* img,
     UInt32 color );
+
+Int32 WriteImageToFile ( 
+    IN const Image* img,
+    IN FILE* file );
 
 #endif /* IMAGE_H_INCLUDED */

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "Macros.h"
 #include "Image.h"
+#include "Color.h"
 
 /*
 YUV 420 planar
@@ -71,24 +73,45 @@ Int32 ClearImage (
     IN OUT Image* img,
     UInt32 color )
 {
-
-    Int32 status = CheckImage ( img, img->width, img->height, IMG_GRAY );
+    
+    Int32 status = CheckImage ( img, img->width, img->height, img->format );
     
     if ( status == STATUS_OK )
     {
-        Int32 pos = 0;
-        Int32 i;
-        for ( i = 0; i < img->width * img->height; ++i ) 
+        switch ( img->format ) 
         {
-            //img->planes[0].data[pos] = color;
-            if ( pos % img->width == 0 ) 
+            case IMG_GRAY :
             {
-                pos += img->planes[0].stride - img->width;
-            }  
+                UInt8 gray;
+                GetGray ( color, &gray );
+                memset ( img->planes[0].data, gray, img->height * img->planes[0].stride );
+                break;
+            }
+            
+            case IMG_RGB :
+            {
+                UInt8 red, green, blue;
+                GetRGB ( color, &red, &green, &blue );
+                memset ( img->planes[0].data, red, img->height * img->planes[0].stride );
+                memset ( img->planes[1].data, green, img->height * img->planes[1].stride );
+                memset ( img->planes[2].data, blue, img->height * img->planes[2].stride );
+                break;
+            }
+
+            case IMG_YUV :
+            {
+                UInt8 Y, U, V;
+                GetYUV ( color, &Y, &U, &V );
+
+                memset ( img->planes[0].data, Y, img->height * img->planes[0].stride );
+                memset ( img->planes[1].data, U,  ( img->height / 2 ) * img->planes[1].stride );
+                memset ( img->planes[2].data, V, ( img->height / 2 ) * img->planes[2].stride );
+                break;
+            }
         }
     }
 
-    return STATUS_FAIL;
+    return status;
 }
 
 
@@ -178,6 +201,7 @@ Int32 GetImageSize(
 /*------------------------------------------------------------------------------
  * GetPlaneSize
  *----------------------------------------------------------------------------*/
+
 Int32 GetPlaneSize(
     IN UInt8 format,
     IN UInt32 width,
@@ -186,8 +210,6 @@ Int32 GetPlaneSize(
     OUT UInt32* planeSize)
 {
     Int32 status;
-
-    // sa tina cont de bpp
     
     if(planeSize == NULL)
     {
@@ -288,7 +310,7 @@ Int32 GetNrPlanes (
                 *numPlanes = 3;
                 break;
             case IMG_YUV :
-                *numPlanes = 2;
+                *numPlanes = 3;
                 break;
             default :
             {
@@ -302,18 +324,6 @@ Int32 GetNrPlanes (
 
     return status;
 }
-
-/*
-buffer = malloc[Image, ImagePlane, Data, ]
-
-newImg = buffer + 0;
-newImg -> planes[0] = buffer + sizeof(Image);
-newImg -> planes[0]->data = buffer + sizeof(Image) + sizeof(ImagePlane);
-newImg -> planes[1] = newImg -> planes[0]->data + dataSize;
-newImg -> planes[1]->data = newImg -> planes[1] + sizeof(ImagePlane);
-...
-*/
-
 
 /*------------------------------------------------------------------------------
  * CreateImage
@@ -380,6 +390,15 @@ Int32 CreateImage(
                     printf("CreateImage: could not allocate plane\n");
                     status = STATUS_FAIL;
                 }
+                if ( format == IMG_YUV && plane > 0 )
+                {
+                    newImg->planes[plane].stride = width / 2;
+                }
+                else
+                {
+                    newImg->planes[plane].stride = width;
+                }
+                
             }
         }
     }
@@ -406,11 +425,18 @@ void DestroyImage (
         {
             if ((*img)->planes[plane].data != NULL)
             {
-                free((*img)->planes[plane].data);
+                //printf ( "DestroyImage: free plane %d\n", plane );
+                //free((*img)->planes[plane].data);
+            } else
+            {
+                printf ( "DestroyImage: empty image plane %d\n", plane );
             }
+            
         }
 
-        free(*img);
+       // printf ( "DestroyImage: free image\n" );
+
+        //free(*img);
 
         *img = NULL;
     }
@@ -427,7 +453,6 @@ Int32 CropImage (
     IN UInt32 offsetY, 
     OUT Image* crop )
 {
-    // vrrifica parametri de intare si iesire si intoarce status
 
     Int32 status = STATUS_OK;
     status = CheckImage ( img, img->width, img->height, img->format );
@@ -489,3 +514,110 @@ Int32 Convert_RGB_to_GRAY (
 
     return status;
 }
+
+/*------------------------------------------------------------------------------
+ * WriteImageToData
+ *----------------------------------------------------------------------------*/
+
+static Int32 WriteImgPlane ( 
+    IN const ImgPlane* imgPlane,
+    IN UInt32 imgWidth, 
+    IN UInt32 imgHeight, 
+    OUT FILE* file )
+{
+    UInt8* data;
+    Int32 y, status, chunksWritten;
+
+    assert ( imgPlane != NULL );
+    assert ( file != NULL );                                                                                                                                                                                                                                                
+
+    data = ( UInt8* ) imgPlane->data;
+
+    if ( data == NULL )
+    {
+        printf ( "WriteImgPlane: Empty image plane\n" );
+        status = STATUS_FAIL;
+    } 
+    else
+    {
+        status = STATUS_OK;
+        for ( y = 0; y < imgHeight && status == STATUS_OK; ++y ) 
+        {
+            chunksWritten = fwrite ( data, imgWidth, 1, file );
+            if ( chunksWritten != 1 )
+            {
+                status = STATUS_FAIL;
+                printf ( "WriteImgPlane: Couldn't write data %d bytes\n", imgWidth );
+            }
+            data += imgPlane->stride;
+        }
+    }
+    
+    return status;
+}
+
+
+
+Int32 WriteImageToFile ( 
+    IN const Image* img,
+    OUT FILE* file )
+{
+    Int32 status = STATUS_OK;
+
+    if ( img == NULL || file == NULL ) 
+    {
+        printf ( "WriteImageToFile: Invalid input argument\n" );
+        status = STATUS_FAIL;
+    }
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( img, img->width, img->height, img->format );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        switch ( img->format )
+        {
+            case IMG_GRAY :
+            {
+                status = WriteImgPlane ( &img->planes[0], img->width, img->height, file );
+                break;
+            }
+            case IMG_RGB :
+            {
+                status = WriteImgPlane ( &img->planes[0], img->width, img->height, file );
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[1], img->width, img->height, file );
+                }
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[2], img->width, img->height, file );
+                }
+
+                break;
+            }
+            case IMG_YUV :
+            {
+                status = WriteImgPlane ( &img->planes[0], img->width, img->height, file );
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[1], img->width / 2, img->height / 2, file );
+                }
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[2], img->width / 2, img->height / 2, file );
+                }
+                break;
+            }
+            default :
+            {
+                status = STATUS_FAIL;
+                printf ( "WriteImageToFile: invalid image format\n" );
+            }
+        }
+    }
+
+    return status;
+} 
