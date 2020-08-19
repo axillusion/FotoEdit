@@ -261,10 +261,10 @@ static Int32 ConvertImageRGBToGray (
 
     if ( status == STATUS_OK )
     {
-        data = ( UInt8 ) dst->planes[0].data;
-        dataRed = ( UInt8 ) src->planes[0].data;
-        dataGreen = ( UInt8 ) src->planes[1].data;
-        dataBlue = ( UInt8 ) src->planes[2].data;
+        data = ( UInt8* ) dst->planes[0].data;
+        dataRed = ( UInt8* ) src->planes[0].data;
+        dataGreen = ( UInt8* ) src->planes[1].data;
+        dataBlue = ( UInt8* ) src->planes[2].data;
         dataStride = dst->planes[0].stride;
         dataStrideRed = src->planes[0].stride;
         dataStrideGreen = src->planes[1].stride;
@@ -338,7 +338,7 @@ static Int32 ConvertImageRGBToYUV (
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( dst, src->width, src->height, IMG_RGB );
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV );
     }
 
     if ( status == STATUS_OK )
@@ -352,13 +352,12 @@ static Int32 ConvertImageRGBToYUV (
 
         // nu tine cont de stride-urile diferite
 
-        for ( i = 0; i < src->planes[0].stride * src->height; ++i )
+        for ( i = 0; i < src->planes[0].width * src->height; ++i )
         {
             red = srcDataRed[i];
             green = srcDataGreen[i];
             blue = srcDataBlue[i];
-            color = blue + green * ( 1<<8 ) + red * ( 1<<16 );
-            GetYUV ( color, &Y, &U, &V );
+            RGBToYUV ( red, green, blue, &Y, &U, &V );
             dstDataY[i] = Y;
             dstDataU[i / 2] = U;
             dstDataV[i / 2] = V;
@@ -440,9 +439,11 @@ static Int32 ConvertImageYUVToRGB (
                 Y = srcDataY[y * srcStrideY + x];
                 U = srcDataU[y * srcStrideU + x];
                 V = srcDataU[y * srcStrideV + x];
-                dstDataR[y * dstStrideR + x] = ( UInt8 ) ( 1.164 * ( Y - 16 ) + 1.596 * ( V - 128 ) );
-                dstDataG[y * dstStrideG + x] = ( UInt8 ) ( 1.164 * ( Y - 16 ) - 0.813 * ( V - 128 ) - 0.391 * ( U - 128 ) );
-                dstDataB[y * dstStrideB + x] = ( UInt8 ) ( 1.164 * ( Y - 16 ) + 2.018 * ( U - 128 ) );
+                
+                YUVToRGB ( Y, U, V, 
+                    dstDataR[y * dstStrideR + x], 
+                    dstDataG[y * dstStrideG + x], 
+                    dstDataB[y * dstStrideB + x] );
             }
         }
     }
