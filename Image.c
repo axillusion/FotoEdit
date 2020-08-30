@@ -98,7 +98,7 @@ Int32 ClearImage (
                 break;
             }
 
-            case IMG_YUV :
+            case IMG_YUV420 :
             {
                 UInt8 Y, U, V;
                 GetYUV ( color, &Y, &U, &V );
@@ -106,6 +106,17 @@ Int32 ClearImage (
                 memset ( img->planes[0].data, Y, img->height * img->planes[0].stride );
                 memset ( img->planes[1].data, U,  ( img->height / 2 ) * img->planes[1].stride );
                 memset ( img->planes[2].data, V, ( img->height / 2 ) * img->planes[2].stride );
+                break;
+            }
+            
+            case IMG_YUV444 :
+            {
+                UInt8 Y, U, V;
+                GetYUV ( color, &Y, &U, &V );
+
+                memset ( img->planes[0].data, Y, img->height * img->planes[0].stride );
+                memset ( img->planes[1].data, U, img->height * img->planes[1].stride );
+                memset ( img->planes[2].data, V, img->height * img->planes[2].stride );
                 break;
             }
         }
@@ -253,7 +264,7 @@ Int32 GetPlaneSize(
                 }
                 break;
             }
-            case IMG_YUV :
+            case IMG_YUV420 :
             {
                 if(plane > 3)
                 {
@@ -270,6 +281,19 @@ Int32 GetPlaneSize(
                     {
                         *planeSize = (width * height) / 4;
                     }
+                }
+                break;
+            }
+            case IMG_YUV444 :
+            {
+                if(plane > 3)
+                {
+                    printf("GetPlaneSize: invalid plane number\n");
+                    status = STATUS_FAIL;
+                }
+                else
+                {
+                    *planeSize = width * height;
                 }
                 break;
             }
@@ -309,7 +333,10 @@ Int32 GetNrPlanes (
             case IMG_RGB :
                 *numPlanes = 3;
                 break;
-            case IMG_YUV :
+            case IMG_YUV420 :
+                *numPlanes = 3;
+                break;
+            case IMG_YUV444 :
                 *numPlanes = 3;
                 break;
             default :
@@ -390,7 +417,7 @@ Int32 CreateImage(
                     printf("CreateImage: could not allocate plane\n");
                     status = STATUS_FAIL;
                 }
-                if ( format == IMG_YUV && plane > 0 )
+                if ( format == IMG_YUV420 && plane > 0 )
                 {
                     newImg->planes[plane].stride = width / 2;
                 }
@@ -470,48 +497,6 @@ Int32 CropImage (
         crop->planes[0].stride = img -> planes[0].stride;
         crop->planes[0].data = img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
     }
-    return status;
-}
-
-/*------------------------------------------------------------------------------
- * ConvertRGBtoGray
- *----------------------------------------------------------------------------*/
-
-Int32 Convert_RGB_to_GRAY ( 
-    IN const Image* src,
-    OUT Image* dst)
-{
-    // tine cont de stride si la dst si la src
-
-    Int8 status = STATUS_OK;    
-
-    status = CheckImage ( src, src->width, src->height, IMG_RGB );
-
-    if ( status == STATUS_OK ) 
-    {
-        status = CheckImage ( dst, src->width, src->height, IMG_GRAY );
-    }
-
-    if ( status == STATUS_OK ) 
-    {
-        UInt32 indexSrc = 0;
-        UInt32 indexDst = 0;
-        UInt32 step;
-        UInt8* r = src->planes[0].data;
-        UInt8* g = src->planes[1].data;
-        UInt8* b = src->planes[2].data;
-        UInt8* gray = dst->planes[0].data;
-        for ( step = 0; step < src->width * src->height; ++step ) 
-        {
-            if ( step % src->width == 0 )
-            {
-                indexSrc += src->planes[0].stride - src->width;
-                indexDst += dst->planes[0].stride - src->width;
-            }
-            gray[indexDst] = ( r[indexSrc] + g[indexSrc] + b[indexSrc] ) / 3;
-        }
-    }
-
     return status;
 }
 
@@ -598,7 +583,7 @@ Int32 WriteImageToFile (
 
                 break;
             }
-            case IMG_YUV :
+            case IMG_YUV420 :
             {
                 status = WriteImgPlane ( &img->planes[0], img->width, img->height, file );
                 if ( status == STATUS_OK )
@@ -609,6 +594,21 @@ Int32 WriteImageToFile (
                 {
                     status = WriteImgPlane ( &img->planes[2], img->width / 2, img->height / 2, file );
                 }
+                break;
+            }
+
+            case IMG_YUV444 :
+            {
+                status = WriteImgPlane ( &img->planes[0], img->width, img->height, file );
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[1], img->width, img->height, file );
+                }
+                if ( status == STATUS_OK )
+                {
+                    status = WriteImgPlane ( &img->planes[2], img->width, img->height, file );
+                }
+
                 break;
             }
             default :

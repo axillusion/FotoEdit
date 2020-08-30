@@ -3,6 +3,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "GenerateMovie.h"
+#include "Draw.h"
 
 #define TABLE_WIDTH 1024
 #define TABLE_HEIGHT 1024
@@ -13,6 +14,7 @@ Int32 GenerateMovie (
     IN Int32 width,
     IN Int32 height,
     IN Int32 numFrames,
+    IN Int32 subsampling,
     IN const char* path )
 {
     Int32 status = STATUS_OK;
@@ -41,7 +43,7 @@ Int32 GenerateMovie (
 
     if ( status == STATUS_OK ) 
     {
-        status = GetFormatFromPath ( path, &format );
+        status = GetFormatFromPath ( path, subsampling, &format );
     }
 
     if ( status == STATUS_OK )
@@ -104,6 +106,7 @@ Int32 GenerateMovie (
 
 Int32 GetFormatFromPath ( 
     IN const char* path,
+    IN Int32 subsampling,
     OUT UInt8* format )
 {
     Int32 status, lastDotPos, i;
@@ -146,7 +149,19 @@ Int32 GetFormatFromPath (
             } 
             else if ( strcmp ( ext, "yuv" ) == 0 ) 
             {
-                *format = IMG_YUV;
+                switch ( subsampling )
+                {
+                    case 420 :
+                        *format = IMG_YUV420;
+                        break;
+                    case 444 :
+                        *format = IMG_YUV444;
+                        break;
+                    default :
+                        printf ( "GetFormatFromPath: Unknown subsampling\n" );
+                        status = STATUS_FAIL;
+                        break;
+                }
             } 
             else
             {

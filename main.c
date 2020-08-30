@@ -6,7 +6,7 @@
 #include "Image.h"
 #include "GenerateMovie.h"
 
-int GetImage ( Image* img, FILE* file ) 
+Int32 GetImage ( Image* img, FILE* file ) 
 { 
     Int32 readStatus;
 
@@ -27,7 +27,7 @@ int GetImage ( Image* img, FILE* file )
         UInt8 numPlanes;
         Int32 i, stride;
 
-        numPlanes = GetNrPlanes ( img->format, &numPlanes );
+        readStatus = GetNrPlanes ( img->format, &numPlanes );
 
         for ( i = 0; i < numPlanes && readStatus == STATUS_OK; ++i )
         {
@@ -38,7 +38,7 @@ int GetImage ( Image* img, FILE* file )
                 if ( img->width == stride )
                 {
                     chread = fread ( img -> planes[i].data, dataSize, 1, file );
-                    if ( chread != dataSize )
+                    if ( chread != 1 )
                     {
                         readStatus = STATUS_FAIL;
                         printf ( "GetImage: Image not read\n" );
@@ -49,7 +49,7 @@ int GetImage ( Image* img, FILE* file )
                     Int32 y, height, width;
                     height = img->height;
                     width = img->width;
-                    if ( img->format == IMG_YUV && i > 0 )
+                    if ( img->format == IMG_YUV420 && i > 0 )
                     {
                         height /= 2;
                         width /= 2;
@@ -59,7 +59,7 @@ int GetImage ( Image* img, FILE* file )
                     {
                         chread = fread ( img->planes[i].data + stride * y, width, 1, file );
 
-                        if ( chread != dataSize )
+                        if ( chread != 1 )
                         {
                             readStatus = STATUS_FAIL;
                             printf ( "GetImage: Image not read\n" );
@@ -131,29 +131,81 @@ img = 0
 // verifica argumetele de intrare si tine cont de ele cand creem imaginea de intrare si imaginea de iesire
 
 // Usage:
-// -i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path>
+// -i <path> -f <format> -s <subsampling> -w <width> -h <height> -b <bpp> -o <path>
 
 void PrintUsage ( void ) 
 {
-    printf ( "Wrong usage\nUsage:\n-i <path> -f <format> -w <width> -h <height> -b <bpp> -o <path>\n" );
+    printf ( "Wrong usage\nUsage:\n-i <path> -s1 <subsampling> -w <width> -h <height> -b <bpp> -o <path> -s2 <subsampling>\n" );
+}
+
+Int32 InitFileAndImage ( 
+    IN const char* path,
+    IN Int32 forRead,
+    IN UInt32 width,
+    IN UInt32 height,
+    IN UInt8 bpp,
+    IN Int32 subsampling,
+    OUT FILE** file,
+    OUT Image** img )  
+{
+    UInt8 format;
+    Int32 status = STATUS_OK;
+
+    if ( path == NULL || file == NULL || img == NULL )
+    {
+        status = STATUS_FAIL;
+        printf ( "InitFileAndImage: Invalid input parameters\n" );
+    } 
+
+    if ( status == STATUS_OK )
+    {
+        status = GetFormatFromPath ( path, subsampling, &format );
+        if ( status != STATUS_OK )
+        {
+            printf ( "GetFormatFromPath failed with status %d", status );
+        }
+    }    
+
+    if ( status == STATUS_OK )
+    {   
+        const char* openFlag = ( forRead == 0 ) ? "rb" : "wb";
+        *file = fopen ( path, openFlag );
+        if ( *file == NULL )
+        {
+            status = STATUS_FAIL;
+            printf ( "InitImageAndFile: could not open file %s\n", path ); 
+        }
+    }
+
+    if ( status == STATUS_OK )
+    {
+        status = CreateImage ( format, bpp, width, height, img );
+        if (status != STATUS_OK )
+        {
+            printf("CreateImage failed with status %d", status);
+        }
+    }
+
+    return status;
 }
 
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;
     Image* outputImg;
+    FILE *fin, *fout;
 
     char* inputPath = NULL;
     char* outputPath = NULL;
     Int32 i;
     Int32 width = 0;
     Int32 height = 0;
-    UInt8 format = 0;
     Int32 bpp = 0;
     Int32 status = STATUS_OK;
-    UInt8 outputFormat;
+    Int32 subsampling1 = 0;
+    Int32 subsampling2 = 0;
 
-    if ( argc != 13 ) 
+    if ( argc != 15 ) 
     {
         PrintUsage();
         status = STATUS_FAIL;
@@ -172,9 +224,6 @@ Int32 main ( Int32 argc, char* argv[] ) {
                     case 'i' :
                         inputPath = argv[i + 1];
                         break;
-                    case 'f' :
-                        format = ( UInt8 ) atoi ( argv[i + 1] );
-                        break;
                     case 'w' :
                         width = atoi ( argv[i + 1] );
                         break;
@@ -186,6 +235,17 @@ Int32 main ( Int32 argc, char* argv[] ) {
                         break;
                     case 'o' :
                         outputPath = argv[i + 1];
+                        break;
+                    case 's' :
+                        ++arg;
+                        if ( *arg == '1' )
+                        {
+                            subsampling1 = atoi ( argv[i + 1] );
+                        }
+                        else
+                        {
+                            subsampling2 = atoi ( argv[i + 1] );
+                        }
                         break;
                     default : 
                         PrintUsage();
@@ -202,49 +262,53 @@ Int32 main ( Int32 argc, char* argv[] ) {
 
     if ( status == STATUS_OK ) 
     {
-        status = GenerateMovie ( width, height, 300, inputPath );
+        status = GenerateMovie ( width, height, 300, subsampling1, inputPath );
     }
 
     if ( status == STATUS_OK ) 
     {
-        FILE* fin = fopen ( inputPath, "rb" );
-        
-        Int32 status;
-        status = CreateImage ( format, bpp, width, height, &img );
 
-        if (status != STATUS_OK )
-        {
-            printf("CreateImage failed with status %d", status);
-        }
+        status = InitFileAndImage ( 
+                 inputPath,
+                 0, // for read
+                 width,
+                 height,
+                 bpp,
+                 subsampling1,
+                 &fin,
+                 &img );
+    }
 
-        FILE* fout = fopen ( outputPath, "wb" );
+    if ( status == STATUS_OK )
+    {
+        status = InitFileAndImage ( 
+                 outputPath,
+                 1, // for write
+                 width,
+                 height,
+                 bpp,
+                 subsampling2,
+                 &fout,
+                 &outputImg );
+    }
+    i = 0;
+    while ( GetImage ( img, fin ) == STATUS_OK ) 
+    {
+        printf ( "Proccesing frame %d\n", ++i);
+        ConvertImage ( img, outputImg );
+        WriteImageToFile ( outputImg, fout );
+    }
 
-        if ( status == STATUS_OK )
-        {
-            status = GetFormatFromPath ( outputPath, &outputFormat );
-        }
+    DestroyImage ( &img );
+    DestroyImage ( &outputImg );
 
-        if ( status == STATUS_OK )
-        {
-            status = CreateImage ( outputFormat, bpp, width, height, &outputImg );
-        }
-
-        while ( GetImage ( img, fin ) == STATUS_OK ) 
-        {
-            ConvertImage ( img, outputImg );
-            WriteImageToFile ( outputImg, fout );
-        }
-
-        /*DestroyImage ( &img );*/
-
-        if ( fin != NULL )
-        {
-            fclose ( fin );
-        }
-        if ( fout != NULL )
-        {
-            fclose ( fout );
-        }
+    if ( fin != NULL )
+    {
+        fclose ( fin );
+    }
+    if ( fout != NULL )
+    {
+        fclose ( fout );
     }
 
     return status;

@@ -1,9 +1,13 @@
 #include <stdio.h>
+#include <assert.h>
+#include <string.h>
 #include "Draw.h"
+#include "Color.h"
 
 static void DrawRectangleGray ( Image* img, const Rectangle* rectangle, UInt32 color );
 static void DrawRectangleRGB ( Image* img, const Rectangle* rectangle, UInt32 color );
-static void DrawRectangleYUV ( Image* img, const Rectangle* rectangle, UInt32 color );
+static void DrawRectangleYUV420 ( Image* img, const Rectangle* rectangle, UInt32 color );
+static void DrawRectangleYUV444 ( Image* img, const Rectangle* rectangle, UInt32 color );
 
 Int32 DrawRectangle ( 
     IN Image* img,
@@ -31,8 +35,11 @@ Int32 DrawRectangle (
             case IMG_RGB : 
                 DrawRectangleRGB ( img, rectangle, color );
                 break;
-            case IMG_YUV : 
-                DrawRectangleYUV ( img, rectangle, color );
+            case IMG_YUV420 : 
+                DrawRectangleYUV420 ( img, rectangle, color );
+                break;
+            case IMG_YUV444 :
+                DrawRectangleYUV444 ( img, rectangle, color );
                 break;
             default :
                 printf ( "DrawRectangle: Invalid image format\n" );
@@ -151,7 +158,7 @@ static void DrawRectangleRGB (
     DrawRect ( imgDataBlue, img->width, img->height, imgDataStrideBlue, blue, rectangle );
 }
 
-static void DrawRectangleYUV ( 
+static void DrawRectangleYUV420 ( 
     IN OUT Image* img, 
     IN const Rectangle* rectangle, 
     IN UInt32 color )
@@ -163,7 +170,7 @@ static void DrawRectangleYUV (
 
     assert ( img != NULL );
     assert ( rectangle != NULL );
-    assert ( img->format == IMG_YUV );
+    assert ( img->format == IMG_YUV420 );
     
     GetYUV ( color, &Y, &U, &V );
 
@@ -183,4 +190,31 @@ static void DrawRectangleYUV (
     newRectangle.height /= 2;
     DrawRect ( imgDataU, img->width / 2, img->height / 2, imgDataStrideU, U, &newRectangle );
     DrawRect ( imgDataV, img->width / 2, img->height / 2, imgDataStrideV, V, &newRectangle );
+}
+
+static void DrawRectangleYUV444 ( 
+    IN OUT Image* img, 
+    IN const Rectangle* rectangle, 
+    IN UInt32 color )
+{
+    UInt8 Y, U, V;
+    UInt32 imgDataStrideY, imgDataStrideU, imgDataStrideV;
+    UInt8* imgDataY, *imgDataU, *imgDataV;
+
+    assert ( img != NULL );
+    assert ( rectangle != NULL );
+    assert ( img->format == IMG_YUV444 );
+    
+    GetYUV ( color, &Y, &U, &V );
+
+    imgDataStrideY = img->planes[0].stride;
+    imgDataStrideU= img->planes[1].stride;
+    imgDataStrideV = img->planes[2].stride;
+    imgDataY = ( UInt8* ) img->planes[0].data;
+    imgDataU = ( UInt8* ) img->planes[1].data;
+    imgDataV = ( UInt8* ) img->planes[2].data;
+
+    DrawRect ( imgDataY, img->width , img->height, imgDataStrideY, Y, rectangle );
+    DrawRect ( imgDataU, img->width, img->height, imgDataStrideU, U, rectangle );
+    DrawRect ( imgDataV, img->width, img->height, imgDataStrideV, V, rectangle );
 }

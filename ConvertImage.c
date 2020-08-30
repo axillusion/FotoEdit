@@ -5,6 +5,12 @@
 #include "Image.h"
 #include "Color.h"
 
+static void CopyPlane ( 
+    IN UInt32 width,
+    IN UInt32 height,
+    IN const ImgPlane* src,
+    OUT ImgPlane* dst );
+
 static Int32 ConvertImageGrayToGray ( 
     IN const Image* src,
     OUT Image* dst );
@@ -13,7 +19,11 @@ static Int32 ConvertImageGrayToRGB (
     IN const Image* src,
     OUT Image* dst );
 
-static Int32 ConvertImageGrayToYUV ( 
+static Int32 ConvertImageGrayToYUV420 ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageGrayToYUV444 ( 
     IN const Image* src,
     OUT Image* dst );
 
@@ -25,21 +35,46 @@ static Int32 ConvertImageRGBToRGB (
     IN const Image* src,
     OUT Image* dst );
 
-static Int32 ConvertImageRGBToYUV ( 
+static Int32 ConvertImageRGBToYUV420 ( 
     IN const Image* src,
     OUT Image* dst );
 
-static Int32 ConvertImageYUVToGray ( 
+static Int32 ConvertImageRGBToYUV444 ( 
     IN const Image* src,
     OUT Image* dst );
 
-static Int32 ConvertImageYUVToRGB ( 
+static Int32 ConvertImageYUV420ToGray ( 
     IN const Image* src,
     OUT Image* dst );
 
-static Int32 ConvertImageYUVToYUV ( 
+static Int32 ConvertImageYUV420ToRGB ( 
     IN const Image* src,
     OUT Image* dst );
+
+static Int32 ConvertImageYUV420ToYUV420 ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageYUV420ToYUV444 ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageYUV444ToGray ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageYUV444ToRGB ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageYUV444ToYUV420 ( 
+    IN const Image* src,
+    OUT Image* dst );
+
+static Int32 ConvertImageYUV444ToYUV444 ( 
+    IN const Image* src,
+    OUT Image* dst );
+
 
 Int32 ConvertImage ( 
     IN const Image* src,
@@ -75,10 +110,14 @@ Int32 ConvertImage (
             {
                 status = ConvertImageGrayToRGB ( src, dst );
             } 
-            else if ( dst->format == IMG_YUV ) 
+            else if ( dst->format == IMG_YUV420 ) 
             {
-                status = ConvertImageGrayToYUV ( src, dst );
+                status = ConvertImageGrayToYUV420 ( src, dst );
             } 
+            else if ( dst->format == IMG_YUV444 )
+            {
+                status = ConvertImageGrayToYUV444 ( src, dst );
+            }
             else 
             {
                 printf ( "ConvertImage: Invalid destination format\n" );
@@ -95,30 +134,62 @@ Int32 ConvertImage (
             {
                 status = ConvertImageRGBToRGB ( src, dst );
             } 
-            else if ( dst->format == IMG_YUV ) 
+            else if ( dst->format == IMG_YUV420 ) 
             {
-                status = ConvertImageRGBToYUV ( src, dst );
+                status = ConvertImageRGBToYUV420 ( src, dst );
             } 
+            else if ( dst->format == IMG_YUV444 )
+            {
+                status = ConvertImageRGBToYUV444 ( src, dst );
+            }
             else 
             {
                 printf ( "ConvertImage: Invalid destination format\n" );
                 status = STATUS_FAIL;
             }
         }
-        else if ( src->format == IMG_YUV )
+        else if ( src->format == IMG_YUV420 )
         {
             if ( dst->format == IMG_GRAY )
             {
-                status = ConvertImageYUVToGray ( src, dst );
+                status = ConvertImageYUV420ToGray ( src, dst );
             } 
             else if ( dst->format == IMG_RGB )
             {
-                status = ConvertImageYUVToRGB ( src, dst );
+                status = ConvertImageYUV420ToRGB ( src, dst );
             } 
-            else if ( dst->format == IMG_YUV ) 
+            else if ( dst->format == IMG_YUV420 ) 
             {
-                status = ConvertImageYUVToYUV ( src, dst );
+                status = ConvertImageYUV420ToYUV420 ( src, dst );
             } 
+            else if ( dst->format == IMG_YUV444 )
+            {
+                status = ConvertImageYUV420ToYUV444 ( src, dst );
+            }
+            else 
+            {
+                printf ( "ConvertImage: Invalid destination format\n" );
+                status = STATUS_FAIL;
+            }
+        }
+        else if ( src->format == IMG_YUV444 )
+        {
+            if ( dst->format == IMG_GRAY )
+            {
+                status = ConvertImageYUV444ToGray ( src, dst );
+            } 
+            else if ( dst->format == IMG_RGB )
+            {
+                status = ConvertImageYUV444ToRGB ( src, dst );
+            } 
+            else if ( dst->format == IMG_YUV420 ) 
+            {
+                status = ConvertImageYUV444ToYUV420 ( src, dst );
+            } 
+            else if ( dst->format == IMG_YUV444 )
+            {
+                status = ConvertImageYUV444ToYUV444 ( src, dst );
+            }
             else 
             {
                 printf ( "ConvertImage: Invalid destination format\n" );
@@ -140,8 +211,7 @@ static Int32 ConvertImageGrayToGray (
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, y;
-    UInt32 srcStride, dstStride;
+    Int32 status;
 
     assert ( src != NULL );
     assert ( dst != NULL );
@@ -155,12 +225,7 @@ static Int32 ConvertImageGrayToGray (
 
     if ( status == STATUS_OK )
     {
-        srcStride = src->planes[0].stride;
-        dstStride = dst->planes[0].stride;
-        for ( y = 0; y < dst->height; ++y ) 
-        {
-            memcpy ( dst->planes[0].data + dstStride * y, src->planes[0].data + srcStride * y, dst->width );
-        }
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
     }
 
     return status;
@@ -170,7 +235,7 @@ static Int32 ConvertImageGrayToRGB (
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, srcStride, dstStrideR, dstStrideG, dstStrideB, y;
+    Int32 status;
 
     assert ( src != NULL );
     assert ( dst != NULL );
@@ -184,22 +249,15 @@ static Int32 ConvertImageGrayToRGB (
 
     if ( status == STATUS_OK )
     {
-        srcStride = src->planes[0].stride;
-        dstStrideR = dst->planes[0].stride;
-        dstStrideG = dst->planes[1].stride;
-        dstStrideB = dst->planes[2].stride;
-        for ( y = 0; y < dst->height; ++y ) 
-        {
-            memcpy ( dst->planes[0].data + dstStrideR * y, src->planes[0].data + srcStride * y, dst->width );
-            memcpy ( dst->planes[1].data + dstStrideG * y, src->planes[0].data + srcStride * y, dst->width );
-            memcpy ( dst->planes[2].data + dstStrideB * y, src->planes[0].data + srcStride * y, dst->width );
-        }
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[1] );
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[2] );
     }
 
     return status;
 }
 
-static Int32 ConvertImageGrayToYUV (
+static Int32 ConvertImageGrayToYUV420 (
     IN const Image* src,
     OUT Image* dst )
 {
@@ -214,7 +272,7 @@ static Int32 ConvertImageGrayToYUV (
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( dst, src->width, src->height, IMG_YUV );
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -232,6 +290,45 @@ static Int32 ConvertImageGrayToYUV (
             dstDataY[i] = Y;
             dstDataU[i / 2] = U;
             dstDataV[i / 2] = V;
+        }
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageGrayToYUV444 ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status, i, color;
+    UInt8 red, green, blue, Y, U, V;
+    UInt8 *data, *dstDataY, *dstDataU, *dstDataV;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_GRAY );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        data = ( UInt8* ) src->planes[0].data;
+        dstDataY = ( UInt8* ) dst->planes[0].data;
+        dstDataU = ( UInt8* ) dst->planes[1].data;
+        dstDataV = ( UInt8* ) dst->planes[2].data;
+
+        for ( i = 0; i < src->planes[0].stride * src->height; ++i )
+        {
+            red = green = blue = data[i];
+            color = blue + green * ( 1<<8 ) + red * ( 1<<16 );
+            GetYUV ( color, &Y, &U, &V );
+            dstDataY[i] = Y;
+            dstDataU[i] = U;
+            dstDataV[i] = V;
         }
     }
 
@@ -289,8 +386,7 @@ static Int32 ConvertImageRGBToRGB (
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, y;
-    UInt32 srcStrideRed, srcStrideGreen, srcStrideBlue, dstStrideRed, dstStrideGreen, dstStrideBlue;
+    Int32 status;
 
     assert ( src != NULL );
     assert ( dst != NULL );
@@ -304,32 +400,22 @@ static Int32 ConvertImageRGBToRGB (
 
     if ( status == STATUS_OK )
     {
-        srcStrideRed = src->planes[0].stride;
-        srcStrideGreen = src->planes[1].stride;
-        srcStrideBlue = src->planes[2].stride;
-        dstStrideRed = dst->planes[0].stride;
-        dstStrideGreen = dst->planes[1].stride;
-        dstStrideBlue = dst->planes[2].stride;
-
-        for ( y = 0; y < dst->height; ++y ) 
-        {
-            memcpy ( dst->planes[0].data + dstStrideRed * y, src->planes[0].data + srcStrideRed * y, dst->width );
-            memcpy ( dst->planes[1].data + dstStrideGreen * y, src->planes[1].data + srcStrideGreen * y, dst->width );
-            memcpy ( dst->planes[2].data + dstStrideBlue * y, src->planes[2].data + srcStrideBlue * y, dst->width );
-        }
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        CopyPlane ( dst->width, dst->height, &src->planes[1], &dst->planes[1] );
+        CopyPlane ( dst->width, dst->height, &src->planes[2], &dst->planes[2] );
     }
 
     return status;
 }
 
-static Int32 ConvertImageRGBToYUV ( 
+static Int32 ConvertImageRGBToYUV420 ( 
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, i;
-    UInt32 color;
+    Int32 status, y, x;
     UInt8 red, green, blue, Y, U, V;
     UInt8 *srcDataRed, *srcDataGreen, *srcDataBlue, *dstDataY, *dstDataU, *dstDataV;
+    UInt32 srcStrideR, srcStrideG, srcStrideB, dstStrideY, dstStrideU, dstStrideV;
 
     assert ( src != NULL );
     assert ( dst != NULL );
@@ -338,7 +424,7 @@ static Int32 ConvertImageRGBToYUV (
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( dst, src->width, src->height, IMG_YUV );
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -350,34 +436,97 @@ static Int32 ConvertImageRGBToYUV (
         dstDataU = ( UInt8* ) dst->planes[1].data;
         dstDataV = ( UInt8* ) dst->planes[2].data;
 
-        // nu tine cont de stride-urile diferite
-
-        for ( i = 0; i < src->planes[0].width * src->height; ++i )
+        srcStrideR = src->planes[0].stride;
+        srcStrideG = src->planes[1].stride;
+        srcStrideB = src->planes[2].stride;
+        dstStrideY = dst->planes[0].stride;
+        dstStrideU = dst->planes[1].stride;
+        dstStrideV = dst->planes[2].stride;
+        
+        for ( y = 0; y < dst->height; ++y )
         {
-            red = srcDataRed[i];
-            green = srcDataGreen[i];
-            blue = srcDataBlue[i];
-            RGBToYUV ( red, green, blue, &Y, &U, &V );
-            dstDataY[i] = Y;
-            dstDataU[i / 2] = U;
-            dstDataV[i / 2] = V;
+            for ( x = 0; x < dst->width; ++x )
+            {
+                red = srcDataRed[y * srcStrideR + x];
+                green = srcDataGreen[y * srcStrideG + x];
+                blue = srcDataBlue[y * srcStrideB + x];
+                RGBToYUV ( red, green, blue, &Y, &U, &V );
+                dstDataY[y * dstStrideY + x] = Y;
+                if ( ( y % 2 == 0 ) && ( x % 2 == 0 ) )
+                {
+                    dstDataU[( y / 2 ) * dstStrideU + x / 2] = U;
+                    dstDataV[( y / 2 ) * dstStrideV + x / 2] = V;
+                }
+            }
         }
     }
 
     return status;
 }
 
-static Int32 ConvertImageYUVToGray ( 
+static Int32 ConvertImageRGBToYUV444 ( 
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, y;
-    UInt32 srcStride, dstStride;
+    Int32 status, y, x;
+    UInt8 red, green, blue, Y, U, V;
+    UInt8 *srcDataRed, *srcDataGreen, *srcDataBlue, *dstDataY, *dstDataU, *dstDataV;
+    UInt32 srcStrideR, srcStrideG, srcStrideB, dstStrideY, dstStrideU, dstStrideV;
 
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = CheckImage ( src, src->width, src->height, IMG_YUV );
+    status = CheckImage ( src, src->width, src->height, IMG_RGB );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        srcDataRed = ( UInt8* ) src->planes[0].data;
+        srcDataGreen = ( UInt8* ) src->planes[1].data;
+        srcDataBlue = ( UInt8* ) src->planes[2].data;
+        dstDataY = ( UInt8* ) dst->planes[0].data;
+        dstDataU = ( UInt8* ) dst->planes[1].data;
+        dstDataV = ( UInt8* ) dst->planes[2].data;
+
+        srcStrideR = src->planes[0].stride;
+        srcStrideG = src->planes[1].stride;
+        srcStrideB = src->planes[2].stride;
+        dstStrideY = dst->planes[0].stride;
+        dstStrideU = dst->planes[1].stride;
+        dstStrideV = dst->planes[2].stride;
+        
+        for ( y = 0; y < dst->height; ++y )
+        {
+            for ( x = 0; x < dst->width; ++x )
+            {
+                red = srcDataRed[y * srcStrideR + x];
+                green = srcDataGreen[y * srcStrideG + x];
+                blue = srcDataBlue[y * srcStrideB + x];
+                RGBToYUV ( red, green, blue, &Y, &U, &V );
+                dstDataY[y * dstStrideY + x] = Y;
+                dstDataU[y * dstStrideU + x] = U;
+                dstDataV[y * dstStrideV + x] = V;
+            }
+        }
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageYUV420ToGray ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV420 );
 
     if ( status == STATUS_OK )
     {
@@ -386,18 +535,13 @@ static Int32 ConvertImageYUVToGray (
 
     if ( status == STATUS_OK )
     {
-        srcStride = src->planes[0].stride;
-        dstStride = dst->planes[0].stride;
-        for ( y = 0; y < dst->height; ++y ) 
-        {
-            memcpy ( dst->planes[0].data + dstStride * y, src->planes[0].data + srcStride * y, dst->width );
-        }
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
     }
 
     return status;
 }
 
-static Int32 ConvertImageYUVToRGB ( 
+static Int32 ConvertImageYUV420ToRGB ( 
     IN const Image* src,
     OUT Image* dst )
 {
@@ -409,7 +553,157 @@ static Int32 ConvertImageYUVToRGB (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = CheckImage ( src, src->width, src->height, IMG_YUV );
+    status = CheckImage ( src, src->width, src->height, IMG_YUV420 );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_RGB );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        srcStrideY = src->planes[0].stride;
+        srcStrideU = src->planes[1].stride;
+        srcStrideV = src->planes[2].stride;
+        dstStrideR = dst->planes[0].stride;
+        dstStrideG = dst->planes[1].stride;
+        dstStrideB = dst->planes[2].stride;
+
+        srcDataY = ( UInt8* ) src->planes[0].data;
+        srcDataU = ( UInt8* ) src->planes[1].data;
+        srcDataV = ( UInt8* ) src->planes[2].data;
+        dstDataR = ( UInt8* ) dst->planes[0].data;
+        dstDataG = ( UInt8* ) dst->planes[1].data;
+        dstDataB = ( UInt8* ) dst->planes[2].data;
+
+        for ( y = 0; y < dst->height; ++y ) 
+        {
+            for ( x = 0; x < dst->width; ++x )
+            {
+                Y = srcDataY[y * srcStrideY + x];
+                U = srcDataU[( y / 2 ) * srcStrideU + x / 2];
+                V = srcDataV[( y / 2 ) * srcStrideV + x / 2];
+                
+                YUVToRGB ( Y, U, V, 
+                    &dstDataR[y * dstStrideR + x], 
+                    &dstDataG[y * dstStrideG + x], 
+                    &dstDataB[y * dstStrideB + x] );
+            }
+        }
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageYUV420ToYUV420 ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV420 );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV420 );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        CopyPlane ( dst->width / 2, dst->height / 2, &src->planes[1], &dst->planes[1] );
+        CopyPlane ( dst->width / 2, dst->height / 2, &src->planes[2], &dst->planes[2] );
+
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageYUV420ToYUV444 ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status, y, x;
+    UInt8 *srcDataU, *srcDataV, *dstDataU, *dstDataV;
+    UInt32 srcStrideU, srcStrideV, dstStrideU, dstStrideV;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV420 );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        srcStrideU = src->planes[1].stride;
+        srcStrideV = src->planes[2].stride;
+        dstStrideU = dst->planes[1].stride;
+        dstStrideV = dst->planes[2].stride;
+
+        srcDataU = ( UInt8* ) src->planes[1].data;
+        srcDataV = ( UInt8* ) src->planes[2].data;
+        dstDataU = ( UInt8* ) dst->planes[1].data;
+        dstDataV = ( UInt8* ) dst->planes[2].data;
+
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        
+        for ( y = 0; y < dst->height; ++y )
+        {
+            for ( x = 0; x < dst->width; ++x )
+            {
+                dstDataU[y * dstStrideU + x] = srcDataU[( y / 2 ) * srcStrideU + x / 2];
+                dstDataV[y * dstStrideV + x] = srcDataV[( y / 2 ) * srcStrideV + x / 2];
+            }
+        }
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageYUV444ToGray ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV444 );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_GRAY );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+    }
+
+    return status;
+}
+
+static Int32 ConvertImageYUV444ToRGB ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status, y, x;
+    UInt32 srcStrideY, srcStrideU, srcStrideV, dstStrideR, dstStrideG, dstStrideB;
+    UInt8 *srcDataY, *srcDataU, *srcDataV, *dstDataR, *dstDataG, *dstDataB; 
+    UInt8 Y, U, V;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
@@ -438,12 +732,12 @@ static Int32 ConvertImageYUVToRGB (
             {
                 Y = srcDataY[y * srcStrideY + x];
                 U = srcDataU[y * srcStrideU + x];
-                V = srcDataU[y * srcStrideV + x];
+                V = srcDataV[y * srcStrideV + x];
                 
                 YUVToRGB ( Y, U, V, 
-                    dstDataR[y * dstStrideR + x], 
-                    dstDataG[y * dstStrideG + x], 
-                    dstDataB[y * dstStrideB + x] );
+                    &dstDataR[y * dstStrideR + x], 
+                    &dstDataG[y * dstStrideG + x], 
+                    &dstDataB[y * dstStrideB + x] );
             }
         }
     }
@@ -451,39 +745,92 @@ static Int32 ConvertImageYUVToRGB (
     return status;
 }
 
-static Int32 ConvertImageYUVToYUV ( 
+static Int32 ConvertImageYUV444ToYUV420 ( 
     IN const Image* src,
     OUT Image* dst )
 {
-    Int32 status, y;
-    UInt32 srcStrideY, srcStrideU, srcStrideV, dstStrideY, dstStrideU, dstStrideV;
+    Int32 status, y, x;
+    UInt8 *srcDataU, *srcDataV, *dstDataU, *dstDataV;
+    UInt32 srcStrideU, srcStrideV, dstStrideU, dstStrideV;
 
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = CheckImage ( src, src->width, src->height, IMG_YUV );
+    status = CheckImage ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( dst, src->width, src->height, IMG_YUV );
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
     {
-        srcStrideY = src->planes[0].stride;
         srcStrideU = src->planes[1].stride;
         srcStrideV = src->planes[2].stride;
-        dstStrideY = dst->planes[0].stride;
         dstStrideU = dst->planes[1].stride;
         dstStrideV = dst->planes[2].stride;
 
-        for ( y = 0; y < dst->height; ++y ) 
+        srcDataU = ( UInt8* ) src->planes[1].data;
+        srcDataV = ( UInt8* ) src->planes[2].data;
+        dstDataU = ( UInt8* ) dst->planes[1].data;
+        dstDataV = ( UInt8* ) dst->planes[2].data;
+
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        
+        for ( y = 0; y < dst->height / 2; ++y )
         {
-            memcpy ( dst->planes[0].data + dstStrideY * y, src->planes[0].data + srcStrideY * y, dst->width );
-            memcpy ( dst->planes[1].data + dstStrideU * ( y / 2 ), src->planes[1].data + srcStrideU * ( y / 2 ), dst->width / 2 );
-            memcpy ( dst->planes[2].data + dstStrideV * ( y / 2 ), src->planes[2].data + srcStrideV * ( y / 2 ), dst->width / 2 );
+            for ( x = 0; x < dst->width / 2; ++x )
+            {
+                dstDataU[y * dstStrideU + x] = srcDataU[2 * y * srcStrideU + x * 2];
+                dstDataV[y * dstStrideV + x] = srcDataV[2 * y * srcStrideV + x * 2];
+            }
         }
     }
 
     return status;
+}
+
+static Int32 ConvertImageYUV444ToYUV444 ( 
+    IN const Image* src,
+    OUT Image* dst )
+{
+    Int32 status;
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+
+    status = CheckImage ( src, src->width, src->height, IMG_YUV444 );
+
+    if ( status == STATUS_OK )
+    {
+        status = CheckImage ( dst, src->width, src->height, IMG_YUV444);
+    }
+
+    if ( status == STATUS_OK )
+    {
+        CopyPlane ( dst->width, dst->height, &src->planes[0], &dst->planes[0] );
+        CopyPlane ( dst->width, dst->height, &src->planes[1], &dst->planes[1] );
+        CopyPlane ( dst->width, dst->height, &src->planes[2], &dst->planes[2] );
+    }
+
+    return status;
+}
+
+static void CopyPlane ( 
+    IN UInt32 width,
+    IN UInt32 height,
+    IN const ImgPlane* src,
+    OUT ImgPlane* dst )
+{
+    Int32 y; 
+
+    assert ( src != NULL );
+    assert ( dst != NULL );
+    assert ( src->data != NULL );
+    assert ( dst->data != NULL );
+    
+    for ( y = 0; y < height; ++y )
+    {
+        memcpy ( dst->data + dst->stride * y, src->data + src->stride * y, width );
+    }
 }

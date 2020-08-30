@@ -5,7 +5,8 @@
 
 #define IMG_GRAY 1
 #define IMG_RGB 2
-#define IMG_YUV 3
+#define IMG_YUV420 3
+#define IMG_YUV444 4
 
 #define MAX_NUM_PLANES 3
 
@@ -57,10 +58,6 @@ Int32 GetPlaneSize(
 Int32 GetNrPlanes(
     IN UInt8 format,
     OUT UInt8* numPlanes);
-
-Int32 Convert_RGB_to_GRAY ( 
-    IN const Image* src,
-    OUT Image* dst);
     
 Int32 GetImageSize(
     IN Image* img,
@@ -80,4 +77,20 @@ Int32 WriteImageToFile (
     IN const Image* img,
     IN FILE* file );
 
+Int32 ConvertImage ( 
+    IN const Image* src,
+    OUT Image* dst );
+
 #endif /* IMAGE_H_INCLUDED */
+
+/* 
+support for format yuv444
+CreateImage
+DestroyImage
+NumPLane
+PlaneSize
+Draw
+Convert
+Sampling - 444 ( -s )
+
+*/
