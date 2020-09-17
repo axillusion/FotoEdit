@@ -118,7 +118,6 @@ Int32 GetFormatFromPath (
     }
     else 
     {
-        
         lastDotPos = -1;
         i = 0;
         while ( path[i] != 0 ) 

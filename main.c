@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <assert.h>
 #include "Macros.h"
 #include "Image.h"
 #include "GenerateMovie.h"
@@ -189,80 +192,217 @@ Int32 InitFileAndImage (
     return status;
 }
 
+Int32 ExtractDataFromFilename ( 
+    IN char* path,
+    OUT Int32* width,
+    OUT Int32* height,
+    OUT Int32* bpp,
+    OUT Int32* subsampling )
+{
+
+    Int32 status = STATUS_OK;
+    char *localpath = strdup ( path );
+
+    if ( localpath != NULL )
+    {
+        path = localpath;
+    }
+
+    assert ( path != NULL );
+    assert ( width != NULL );
+    assert ( height != NULL );
+    assert ( bpp != NULL );
+    assert ( subsampling != NULL );
+
+    char* p = strtok_r ( path, "_", &path );
+
+    /*
+        File_2020_09_02_640x480_b8_30Hz_P400.bw
+        _
+    */
+
+    while ( p != NULL )
+    {
+        if ( strchr ( p, 'x' ) != NULL )
+        {
+            char* strWidth = strtok_r ( p, "x", &p );   
+            char* strHeight = strtok_r ( p, "x", &p );
+            if ( strWidth != NULL && strHeight != NULL )
+            {   
+                Int32 w = atoi ( strWidth );
+                Int32 h = atoi ( strHeight );
+
+                if ( *width != 0 && *width != w )
+                {
+                    printf ( "Warning: Command line argument -w [ %d ] overwrites parsed -w [ %d ] from file name\n", *width, w );
+                }
+                else 
+                {
+                    *width = w;
+                }
+
+                if ( *height != 0 && *height != h )
+                {
+                    printf ( "Warning: Command line argument -h [ %d ] overwrites parsed -h [ %d ] from file name\n", *height, h );
+                }
+                else 
+                {
+                    *height = h;
+                }
+            }
+        }
+        else if ( p[0] == 'b' )
+        {
+            if ( strlen ( p ) > 1 )
+            {
+                Int32 b = atoi ( p + 1 );
+
+                if ( *bpp != 0 && *bpp != b )
+                {
+                    printf ( "Warning: Command line argument -b [ %d ] overwrites parsed -b [ %d ] from file name\n", *bpp, b );
+                }
+                else 
+                {
+                    *bpp = b;
+                }
+            }
+        }
+        else if ( p[0] == 'P' )
+        {
+            if ( strlen ( p ) >= 4 )
+            {
+                Int32 s = atoi ( p + 1 );
+                printf ( "%d\n", s );
+
+                if ( *subsampling != 0 && *subsampling != s )
+                {
+                    printf ( "Warning: Command line argument -s [ %d ] overwrites parsed -s [ %d ] from file name\n", *subsampling, s );
+                }
+                else 
+                {
+                    *subsampling = s;
+                }
+            }
+        }
+
+        p = strtok_r ( path, "_", &path );
+    }
+
+    if ( *width == 0 || *height == 0 || *bpp == 0 || *subsampling == 0 )
+    {
+        status = STATUS_FAIL;
+        printf ( "%d %d %d %d\n", *width, *height, *subsampling, *bpp );
+        PrintUsage();
+    }
+
+    free ( localpath );
+
+    return status;
+}
+
 Int32 main ( Int32 argc, char* argv[] ) {
     
     Image* img;
     Image* outputImg;
-    FILE *fin, *fout;
+    FILE *fin = NULL;
+    FILE *fout = NULL;
 
     char* inputPath = NULL;
     char* outputPath = NULL;
-    Int32 i;
+
     Int32 width = 0;
     Int32 height = 0;
     Int32 bpp = 0;
+    Int32 inputSubsampling = 0;
+    Int32 outputSubsampling = 0;
+
     Int32 status = STATUS_OK;
-    Int32 subsampling1 = 0;
-    Int32 subsampling2 = 0;
+    Int32 i;
+    /*
+        File_2020_09_02_640x480_b8_30Hz_P400.bw
+        Parseaza argumentele de intrare
+        Parseaza path-ul de intrare si iesire pentru parametrii
+    */
 
-    if ( argc != 15 ) 
+    for ( i = 1; i < argc && status == STATUS_OK; i += 2 )
     {
-        PrintUsage();
-        status = STATUS_FAIL;
-    }
-    else
-    {
-        for ( i = 1; i < argc && status == STATUS_OK; i += 2 )
+        const char* arg = argv[i];
+
+        if ( *arg == '-' && ( i + 1 ) < argc )  
         {
-            const char* arg = argv[i];
+            ++arg;
+            switch ( *arg )
+            {
+                case 'i' :
+                    inputPath = argv[i + 1];
+                    break;
+                case 'w' :
+                    width = atoi ( argv[i + 1] );
+                    break;
+                case 'h' :
+                    height = atoi ( argv[i + 1] );
+                    break;
+                case 'b' :
+                    bpp = atoi ( argv[i + 1] );
+                    break;
+                case 'o' :
+                    outputPath = argv[i + 1];
+                    break;
+                case 's' :
+                    ++arg;
+                    if ( *arg == '1' )
+                    {
+                        inputSubsampling = atoi ( argv[i + 1] );
+                    }
+                    else
+                    {
+                        outputSubsampling = atoi ( argv[i + 1] );
+                    }
+                    break;
+                default : 
+                    printf ( "1\n");
+                    PrintUsage();
+                    status = STATUS_FAIL;
+            }
+        } 
+        else
+        {
+            printf ( "2\n");
+            PrintUsage();
+            status = STATUS_FAIL;
+        } 
+    }
 
-            if ( *arg == '-' && ( i + 1 ) < argc )  
-            {
-                ++arg;
-                switch ( *arg )
-                {
-                    case 'i' :
-                        inputPath = argv[i + 1];
-                        break;
-                    case 'w' :
-                        width = atoi ( argv[i + 1] );
-                        break;
-                    case 'h' :
-                        height = atoi ( argv[i + 1] );
-                        break;
-                    case 'b' :
-                        bpp = atoi ( argv[i + 1] );
-                        break;
-                    case 'o' :
-                        outputPath = argv[i + 1];
-                        break;
-                    case 's' :
-                        ++arg;
-                        if ( *arg == '1' )
-                        {
-                            subsampling1 = atoi ( argv[i + 1] );
-                        }
-                        else
-                        {
-                            subsampling2 = atoi ( argv[i + 1] );
-                        }
-                        break;
-                    default : 
-                        PrintUsage();
-                        status = STATUS_FAIL;
-                }
-            } 
-            else
-            {
-                PrintUsage();
-                status = STATUS_FAIL;
-            } 
-        }
+    if ( inputPath == NULL || outputPath == NULL )
+    {
+        printf ( "3\n");
+        PrintUsage();
+        status = STATUS_FAIL; 
+    }
+
+    if ( status == STATUS_OK )
+    {
+        status = ExtractDataFromFilename ( 
+                    inputPath,
+                    &width,
+                    &height,
+                    &bpp,
+                    &inputSubsampling );
+    }
+
+    if ( status == STATUS_OK )
+    {
+        status = ExtractDataFromFilename ( 
+                    outputPath,
+                    &width,
+                    &height,
+                    &bpp,
+                    &outputSubsampling );
     }
 
     if ( status == STATUS_OK ) 
     {
-        status = GenerateMovie ( width, height, 300, subsampling1, inputPath );
+        status = GenerateMovie ( width, height, 300, inputSubsampling, inputPath );
     }
 
     if ( status == STATUS_OK ) 
@@ -274,7 +414,7 @@ Int32 main ( Int32 argc, char* argv[] ) {
                  width,
                  height,
                  bpp,
-                 subsampling1,
+                 inputSubsampling,
                  &fin,
                  &img );
     }
@@ -287,20 +427,24 @@ Int32 main ( Int32 argc, char* argv[] ) {
                  width,
                  height,
                  bpp,
-                 subsampling2,
+                 outputSubsampling,
                  &fout,
                  &outputImg );
     }
-    i = 0;
-    while ( GetImage ( img, fin ) == STATUS_OK ) 
-    {
-        printf ( "Proccesing frame %d\n", ++i);
-        ConvertImage ( img, outputImg );
-        WriteImageToFile ( outputImg, fout );
-    }
 
-    DestroyImage ( &img );
-    DestroyImage ( &outputImg );
+    if ( status == STATUS_OK )
+    {
+        i = 0;
+        while ( GetImage ( img, fin ) == STATUS_OK ) 
+        {
+            printf ( "Proccesing frame %d\n", ++i);
+            ConvertImage ( img, outputImg );
+            WriteImageToFile ( outputImg, fout );
+        }
+
+        DestroyImage ( &img );
+        DestroyImage ( &outputImg );
+    }
 
     if ( fin != NULL )
     {

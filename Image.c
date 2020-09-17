@@ -6,65 +6,40 @@
 #include "Image.h"
 #include "Color.h"
 
-/*
-YUV 420 planar
-+---+---+---+---+---+---+---+---+
-| y | y | y | y | u | u | v | v |
-+---+---+---+---+---|---+---+---+
-| y | y | y | y | u | u | v | v |
-+---+---+---+---+---+---+---+---+
-| y | y | y | y |
-+---+---+---+---+
-| y | y | y | y |
-+---+---+---+---+
+struct Image
+{
+    UInt32 width;
+    UInt32 height;
+    ImgPlane planes[MAX_NUM_PLANES];
+    UInt8 bpp;
+    UInt8 format;
+};
 
-datasize = width * height * 3 / 2;
-*/
-/*
-stride = width + 1
+UInt32 Image_GetWidth ( 
+    IN Image *img )
+{
+    UInt32 width = 0;
 
-UInt8* data = malloc( stride * height)
+    if ( img != NULL )
+    {
+        width = img->width;
+    }
 
-Image.width = width
-Image.height = height
+    return width;
+}
 
-3x3
+UInt32 Image_GetHeight ( 
+    IN Image *img )
+{
+    UInt32 height = 0;
 
-0x00, 0x01, 0x02, 0x03
-0x03, 0x04, 0x05, 0x07
-0x06, 0x07, 0x08, 0x0B
+    if ( img != NULL )
+    {
+        height = img->height;
+    }
 
-+---+---+---+---+
-| 0 | 1 | 2 | 0 |
-+---+---+---+---+
-| 3 | 4 | 5 | 0 |
-+---+---+---+---+
-| 6 | 7 | 8 | 0 |
-+---+---+---+---+
-
-
-
-Image crop
-4x4
-2x2 crop 
-offset x = 1
-offset y = 2 
-
-+----+----+----+----+----+----+----+----+
-| Y1 | Y1 | Y2 | Y2 | u1 | u2 | v1 | v2 |
-+----+----+----+----+----+----+----+----+
-| Y1 | Y1 | Y2 | Y2 | u3 | u4 | v3 | v4 |
-+----+----+----+----+----+----+----+----+
-| Y3 | Y3 | Y4 | Y4 |
-+----+----+----+----+
-| Y3 | Y3 | Y4 | Y4 |
-+----+----+----+----+
-
-UInt8 imgData = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
-*/
-
-// VGA 640x480  aspect ratio 4:3
-// HD 1920x1080 aspect ratio 6:9
+    return height;
+}
 
 /*------------------------------------------------------------------------------
  * ClearImage
