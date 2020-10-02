@@ -4,17 +4,17 @@
 
 static void PrintStatistics()
 {
-
+  /* peak + usage */
 }
 
-static void Alloc()
+static void Alloc ( Int32 size )
 {
-
+   return malloc ( size );
 }
 
-static void Free()
+static void Free ( void* addr )
 {
-
+   free ( addr );
 }
 
 Int32 ArrayMemory_Create ( 
@@ -44,7 +44,7 @@ Int32 ArrayMemory_Create (
       newArrMem->vft->PrintStatistics = PrintStatistics;
       newArrMem->vft->Alloc = Alloc;
       newArrMem->vft->Free = Free;
-      arrMem = newArrMem;
+      *arrMem = newArrMem;
    }
 
    return status;

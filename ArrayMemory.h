@@ -1,7 +1,6 @@
 #ifndef ARRAY_MEMORY_H_INCLUDED
 #define ARRAY_MEMORY_H_INCLUDED
 
-#include "Memory.h"
 #include "Macros.h"
 
 struct ArrayMemory_VFT

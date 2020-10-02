@@ -6,16 +6,16 @@ Facem vft pentru Memory + structura
 ArrayMemory + Heap memory fisiere separate .c + .h cu implementare
 */
 
-struct IMemory_VFT
-{
-    int ( *GetType ) ( void );
-    void* ( *Alloc ) ( int size );
-    void ( *Free ) ( void* addr );
-    
-};
-
 typedef struct IMemory {
     struct IMemory_VFT* vft;
 } IMemory;
+
+struct IMemory_VFT
+{
+    int ( *GetType ) ( IMemory* self );
+    void* ( *Alloc ) ( IMemory* self, int size );
+    void ( *Free ) ( IMemory* self, void* addr );
+    
+};
 
 #endif // MEMORY_H_INCLUDED
