@@ -1,44 +1,21 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h> // malloc 
+#include <string.h> // memset
 #include "HeapMemory.h"
-
-typedef struct Node
-{
-   Int32 size;
-   void* addr;
-
-   Node* next;
-   Node* prev;
-} Node;
 
 static void* Alloc( HeapMemory* self, Int32 size )
 {
-   void* addr = NULL;
+   UInt8* addr = NULL;
 
    if ( self != NULL )
    {
-      Node* node = malloc ( sizeof ( Node ) );
-
-      if ( node != NULL )
+      addr = malloc ( size + sizeof ( Int32 ) ); // + 4 bytes manarie
+      if ( addr != NULL )
       {
-         memset ( node, 0, sizeof ( Node ) );
-         addr = malloc ( size );
-
-         if ( addr != NULL )
-         {
-            node->size = size;
-            node->addr = addr;
-            self->usage += size;
-            self->peak = ( self->peak < self->usage ) ? self->usage : self->peak; 
-            node->next = self->List->next;
-            node->prev = self->List;
-            self->List->next = node;
-         } 
-         else 
-         {
-            free ( node );
-         }
-      } 
+         *( ( Int32* ) addr ) = size;
+         addr += 4 ; // pastram primii 4 bytes ca sa tinem minte size-ul
+      }
    }
 
    return addr;
@@ -46,29 +23,11 @@ static void* Alloc( HeapMemory* self, Int32 size )
 
 static void Free ( HeapMemory* self, void* addr )
 {
-   if ( self != NULL && self->List != NULL )
+   if ( self != NULL )
    {
-      Node* node = self->List->next;
-
-      while ( node != self->List && node->addr != addr )
-      {
-         node = node->next;
-      }
-
-      if ( node != self->List )
-      {
-         node->prev->next = node->next;
-         node->next->prev = node->prev;
-         self->usage -= node->size;
-         free ( node->addr );
-         free ( node );
-      } 
-      else
-      {
-         printf ( "Address not allocated by this Heap object\n" );
-      }
+      Int32 size = *( ( ( Int32* ) addr ) - 1 );
+      free ( ( ( Int32* ) addr ) - 1 );
    }
-   
 }
 
 Int32 HeapMemory_Create ( 

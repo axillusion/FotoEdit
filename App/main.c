@@ -8,6 +8,7 @@
 #include "Macros.h"
 #include "Image.h"
 #include "GenerateMovie.h"
+#include "HeapMemory.h"
 
 Int32 GetImage ( Image* img, FILE* file ) 
 { 
@@ -26,7 +27,6 @@ Int32 GetImage ( Image* img, FILE* file )
     if ( readStatus == STATUS_OK ) 
     {
         UInt32 dataSize;
-        size_t chread;
         UInt8 numPlanes;
         Int32 i, stride;
 
@@ -323,6 +323,9 @@ Int32 main ( Int32 argc, char* argv[] ) {
         Parseaza argumentele de intrare
         Parseaza path-ul de intrare si iesire pentru parametrii
     */
+
+    HeapMemory* heapMem; 
+    status = HeapMemory_Create ( &heapMem );
 
     for ( i = 1; i < argc && status == STATUS_OK; i += 2 )
     {

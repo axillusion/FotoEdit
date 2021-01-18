@@ -4,6 +4,16 @@
 #include "Macros.h"
 #include "AbstractMemory.h"
 
+
+typedef struct Node
+{
+   Int32 size;
+   void* addr;
+
+   struct Node* next;
+   struct Node* prev;
+} Node;
+
 typedef struct HeapMemory {
     // ppublic fields
     struct HeapMemory_VFT* vft;
@@ -11,7 +21,7 @@ typedef struct HeapMemory {
     UInt32 peak;
     UInt32 usage;
     //private fields 
-    Node* List;
+    //Node* List;
 } HeapMemory;
 
 struct HeapMemory_VFT
