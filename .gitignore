@@ -2,6 +2,7 @@
 x64/*
 *.db
 Debug/*
+Build/*
 
 # Prerequisites
 *.d
@@ -62,3 +63,5 @@ dkms.conf
 *.bw
 *.out
 *.hdr
+
+
