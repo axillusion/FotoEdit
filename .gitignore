@@ -3,6 +3,7 @@ x64/*
 *.db
 Debug/*
 Build/*
+Video1
 
 # Prerequisites
 *.d
