@@ -22,6 +22,10 @@ Int32 GenerateMovie (
     Int32 i;
     FILE* fout = NULL;
     Image* img;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     srand( time ( NULL ) );
 
@@ -54,16 +58,16 @@ Int32 GenerateMovie (
     if ( status == STATUS_OK ) 
     {
         UInt32 size;
-        Int32 y = img->width / 2 - 5;
-        Int32 x = img->height / 2 - 5;
+        Int32 y = imgWidth / 2 - 5;
+        Int32 x = imgHeight / 2 - 5;
         Int32 dirY[] = { -1, 0, 1, 0, -1, -1, 1, 1 };
         Int32 dirX[] = { 0, 1, 0, -1, -1, 1, 1, -1 };
         Int32 length = 10;
         Int32 dir = rand() % 8; 
         Rectangle* rectangle = malloc ( sizeof ( Rectangle ) );
-        Int32 step = img->width / 10;
+        Int32 step = imgWidth / 10;
 
-        GetPlaneSize ( img->format, img->width, img->height, 1, &size );
+        GetPlaneSize ( imgFormat, imgWidth, imgHeight, 1, &size );
         rectangle->width = length;
         rectangle->height = length;
 
@@ -82,7 +86,7 @@ Int32 GenerateMovie (
             {
                 y += dirY[dir] * step;
                 x += dirX[dir] * step;
-                while ( y < 0 || x < 0 || y + length >= img->width || x + length >= img->height )
+                while ( y < 0 || x < 0 || y + length >= imgWidth || x + length >= imgHeight )
                 {
                     y -= dirY[dir] * step;
                     x -= dirX[dir] * step;

@@ -5,8 +5,8 @@ project(LibImage ${LANG_LIST})
 set(LIBIMAGE_SRC_PATH "${LibImage_SOURCE_DIR}")
 
 file(GLOB_RECURSE LIB_SRCS
-    "${LIBIMAGE_SRC_PATH}/src/*.c"
-    "${LIBIMAGE_SRC_PATH}/inc/*.h"
+    "${LIBIMAGE_SRC_PATH}/*.c"
+    "${LIBIMAGE_SRC_PATH}/*.h"
 )
 
 add_library (LibImage SHARED ${LIB_SRCS})

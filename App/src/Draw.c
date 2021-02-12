@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <string.h>
 #include "Draw.h"
-#include "Color.h"
 
 static void DrawRectangleGray ( Image* img, const Rectangle* rectangle, UInt32 color );
 static void DrawRectangleRGB ( Image* img, const Rectangle* rectangle, UInt32 color );
@@ -15,6 +14,10 @@ Int32 DrawRectangle (
     IN UInt32 color /* ( 0xRRGGBB ) */ )
 {
     Int32 status;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     if ( img == NULL )
     {
@@ -22,12 +25,12 @@ Int32 DrawRectangle (
     } 
     else
     {
-        status = CheckImage ( img, img->width, img->height, img->format );
+        status = CheckImage ( img, imgWidth, imgHeight, imgFormat );
     }
 
     if ( status == STATUS_OK )
     {
-        switch ( img->format ) 
+        switch ( imgFormat ) 
         {
             case IMG_GRAY :
                 DrawRectangleGray ( img, rectangle, color );
@@ -121,15 +124,20 @@ static void DrawRectangleGray (
     UInt32 imgDataStride;
     UInt8* imgData;
 
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
+
     assert ( img != NULL );
-    assert ( img->format == IMG_GRAY );
+    assert ( imgFormat == IMG_GRAY );
     
     GetGray ( color, &gray );
 
-    imgDataStride = img->planes[0].stride;
-    imgData = ( UInt8* ) img->planes[0].data;
+    imgDataStride = Image_GetPlaneStride ( img, 0 );
+    imgData = ( UInt8* ) Image_GetPlaneData ( img, 0 );
 
-    DrawRect ( imgData, img->width, img->height, imgDataStride, gray, rectangle );
+    DrawRect ( imgData, imgWidth, imgHeight, imgDataStride, gray, rectangle );
 }
 
 static void DrawRectangleRGB ( 
@@ -140,22 +148,27 @@ static void DrawRectangleRGB (
     UInt8 red, green, blue;
     UInt32 imgDataStrideRed, imgDataStrideGreen, imgDataStrideBlue;
     UInt8* imgDataRed, *imgDataGreen, *imgDataBlue;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     assert ( img != NULL );
-    assert ( img->format == IMG_RGB );
+    assert ( imgFormat == IMG_RGB );
     
     GetRGB ( color, &red, &green, &blue );
 
-    imgDataStrideRed = img->planes[0].stride;
-    imgDataStrideGreen = img->planes[1].stride;
-    imgDataStrideBlue = img->planes[2].stride;
-    imgDataRed = ( UInt8* ) img->planes[0].data;
-    imgDataGreen = ( UInt8* ) img->planes[1].data;
-    imgDataBlue = ( UInt8* ) img->planes[2].data;
+    imgDataStrideRed = Image_GetPlaneStride ( img, 0 );
+    imgDataStrideGreen= Image_GetPlaneStride ( img, 1 );
+    imgDataStrideBlue = Image_GetPlaneStride ( img, 2 );
+    imgDataRed = ( UInt8* ) Image_GetPlaneData ( img, 0 );
+    imgDataGreen = ( UInt8* ) Image_GetPlaneData ( img, 1 );
+    imgDataBlue = ( UInt8* ) Image_GetPlaneData ( img, 2 );
 
-    DrawRect ( imgDataRed, img->width, img->height, imgDataStrideRed, red, rectangle );
-    DrawRect ( imgDataGreen, img->width, img->height, imgDataStrideGreen, green, rectangle );
-    DrawRect ( imgDataBlue, img->width, img->height, imgDataStrideBlue, blue, rectangle );
+
+    DrawRect ( imgDataRed, imgWidth, imgHeight, imgDataStrideRed, red, rectangle );
+    DrawRect ( imgDataGreen, imgWidth, imgHeight, imgDataStrideGreen, green, rectangle );
+    DrawRect ( imgDataBlue, imgWidth, imgHeight, imgDataStrideBlue, blue, rectangle );
 }
 
 static void DrawRectangleYUV420 ( 
@@ -167,29 +180,33 @@ static void DrawRectangleYUV420 (
     UInt32 imgDataStrideY, imgDataStrideU, imgDataStrideV;
     UInt8* imgDataY, *imgDataU, *imgDataV;
     Rectangle newRectangle;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     assert ( img != NULL );
     assert ( rectangle != NULL );
-    assert ( img->format == IMG_YUV420 );
+    assert ( imgFormat == IMG_YUV420 );
     
     GetYUV ( color, &Y, &U, &V );
 
-    imgDataStrideY = img->planes[0].stride;
-    imgDataStrideU= img->planes[1].stride;
-    imgDataStrideV = img->planes[2].stride;
-    imgDataY = ( UInt8* ) img->planes[0].data;
-    imgDataU = ( UInt8* ) img->planes[1].data;
-    imgDataV = ( UInt8* ) img->planes[2].data;
+    imgDataStrideY = Image_GetPlaneStride ( img, 0 );
+    imgDataStrideU= Image_GetPlaneStride ( img, 1 );
+    imgDataStrideV = Image_GetPlaneStride ( img, 2 );
+    imgDataY = ( UInt8* ) Image_GetPlaneData ( img, 0 );
+    imgDataU = ( UInt8* ) Image_GetPlaneData ( img, 1 );
+    imgDataV = ( UInt8* ) Image_GetPlaneData ( img, 2 );
 
-    DrawRect ( imgDataY, img->width , img->height, imgDataStrideY, Y, rectangle );
+    DrawRect ( imgDataY, imgWidth , imgHeight, imgDataStrideY, Y, rectangle );
 
     newRectangle = *rectangle;
     newRectangle.top /= 2;
     newRectangle.left /= 2;
     newRectangle.width /= 2;
     newRectangle.height /= 2;
-    DrawRect ( imgDataU, img->width / 2, img->height / 2, imgDataStrideU, U, &newRectangle );
-    DrawRect ( imgDataV, img->width / 2, img->height / 2, imgDataStrideV, V, &newRectangle );
+    DrawRect ( imgDataU, imgWidth / 2, imgHeight / 2, imgDataStrideU, U, &newRectangle );
+    DrawRect ( imgDataV, imgWidth / 2, imgHeight / 2, imgDataStrideV, V, &newRectangle );
 }
 
 static void DrawRectangleYUV444 ( 
@@ -200,21 +217,25 @@ static void DrawRectangleYUV444 (
     UInt8 Y, U, V;
     UInt32 imgDataStrideY, imgDataStrideU, imgDataStrideV;
     UInt8* imgDataY, *imgDataU, *imgDataV;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     assert ( img != NULL );
     assert ( rectangle != NULL );
-    assert ( img->format == IMG_YUV444 );
+    assert ( imgFormat == IMG_YUV444 );
     
     GetYUV ( color, &Y, &U, &V );
 
-    imgDataStrideY = img->planes[0].stride;
-    imgDataStrideU= img->planes[1].stride;
-    imgDataStrideV = img->planes[2].stride;
-    imgDataY = ( UInt8* ) img->planes[0].data;
-    imgDataU = ( UInt8* ) img->planes[1].data;
-    imgDataV = ( UInt8* ) img->planes[2].data;
+    imgDataStrideY = Image_GetPlaneStride ( img, 0 );
+    imgDataStrideU= Image_GetPlaneStride ( img, 1 );
+    imgDataStrideV = Image_GetPlaneStride ( img, 2 );
+    imgDataY = ( UInt8* ) Image_GetPlaneData ( img, 0 );
+    imgDataU = ( UInt8* ) Image_GetPlaneData ( img, 1 );
+    imgDataV = ( UInt8* ) Image_GetPlaneData ( img, 2 );
 
-    DrawRect ( imgDataY, img->width , img->height, imgDataStrideY, Y, rectangle );
-    DrawRect ( imgDataU, img->width, img->height, imgDataStrideU, U, rectangle );
-    DrawRect ( imgDataV, img->width, img->height, imgDataStrideV, V, rectangle );
+    DrawRect ( imgDataY, imgWidth , imgHeight, imgDataStrideY, Y, rectangle );
+    DrawRect ( imgDataU, imgWidth, imgHeight, imgDataStrideU, U, rectangle );
+    DrawRect ( imgDataV, imgWidth, imgHeight, imgDataStrideV, V, rectangle );
 }

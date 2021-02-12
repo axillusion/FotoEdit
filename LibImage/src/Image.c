@@ -2,18 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "Macros.h"
 #include "Image.h"
 #include "Color.h"
-
-struct Image
-{
-    UInt32 width;
-    UInt32 height;
-    ImgPlane planes[MAX_NUM_PLANES];
-    UInt8 bpp;
-    UInt8 format;
-};
+#include "ImagePriv.h"
 
 UInt32 Image_GetWidth ( 
     IN Image *img )
@@ -39,6 +30,60 @@ UInt32 Image_GetHeight (
     }
 
     return height;
+}
+
+UInt8 Image_GetBPP ( 
+    IN Image *img )
+{
+    UInt8 bpp = 0;
+
+    if ( img != NULL )
+    {
+        bpp = img->bpp;
+    }
+
+    return bpp;
+}
+
+UInt8 Image_GetFormat ( 
+    IN Image *img )
+{
+    UInt8 format = 0;
+
+    if ( img != NULL )
+    {
+        format = img->format;
+    }
+
+    return format;
+}
+
+UInt32 Image_GetPlaneStride (
+    IN Image *img,
+    IN UInt8 plane )
+{
+	UInt32 stride = 0;
+
+	if ( img != NULL )
+	{
+		stride = img->planes[plane].stride;
+	}
+	
+	return stride;
+}
+
+void* Image_GetPlaneData (
+    IN Image *img,
+    IN UInt8 plane )
+{
+	void* data = NULL;
+
+	if ( img != NULL )
+	{
+		data = img->planes[plane].data;
+	}
+	
+	return data;
 }
 
 /*------------------------------------------------------------------------------

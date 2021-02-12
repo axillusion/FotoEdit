@@ -14,7 +14,7 @@ Video1
 *.obj
 *.elf
 
-# Linker output
+# Linker outputHAHAI
 *.ilk
 *.map
 *.exp

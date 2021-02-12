@@ -1,8 +1,13 @@
 #ifndef GENERATE_MOVIE_H_INCLUDED
 #define GENERATE_MOVIE_H_INCLUDED
 
-#include "Macros.h"
-#include "Image.h"
+#include <LibImage.h>
+#include "Defines.h"
+
+typedef struct Rectangle
+{
+    Int32 top, left, width, height;
+} Rectangle;
 
 Int32 GenerateMovie (
     IN Int32 width,

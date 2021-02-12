@@ -5,14 +5,16 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include "Macros.h"
-#include "Image.h"
-#include "GenerateMovie.h"
-#include "HeapMemory.h"
+#include <LibImage.h>
+#include "Defines.h"
 
 Int32 GetImage ( Image* img, FILE* file ) 
 { 
     Int32 readStatus;
+	UInt32 imgWidth, imgHeight, imgFormat;
+	imgWidth = Image_GetWidth ( img );
+	imgHeight = Image_GetHeight ( img );
+	imgFormat = Image_GetFormat ( img );
 
     if ( img == NULL || file == NULL )
     {
@@ -21,26 +23,28 @@ Int32 GetImage ( Image* img, FILE* file )
     } 
     else 
     {
-        readStatus = CheckImage ( img, img->width, img->height, img->format );
+        readStatus = CheckImage ( img, imgWidth, imgHeight, imgFormat );
     }
 
     if ( readStatus == STATUS_OK ) 
     {
         UInt32 dataSize;
         UInt8 numPlanes;
-        Int32 i, stride;
+        Int32 i, imgStride, imgData;
+		UInt32 chread;
 
-        readStatus = GetNrPlanes ( img->format, &numPlanes );
+        readStatus = GetNrPlanes ( imgFormat, &numPlanes );
 
         for ( i = 0; i < numPlanes && readStatus == STATUS_OK; ++i )
         {
-            stride = img->planes[i].stride;
-            readStatus = GetPlaneSize ( img->format, img->width, img->height, i + 1, &dataSize );
+            imgStride = Image_GetPlaneStride ( img, i );
+			imgData = Image_GetPlaneData ( img, i );
+            readStatus = GetPlaneSize ( imgFormat, imgWidth, imgHeight, i + 1, &dataSize );
             if ( readStatus == STATUS_OK )
             {
-                if ( img->width == stride )
+                if ( imgWidth == imgStride )
                 {
-                    chread = fread ( img -> planes[i].data, dataSize, 1, file );
+                    chread = fread ( imgData, dataSize, 1, file );
                     if ( chread != 1 )
                     {
                         readStatus = STATUS_FAIL;
@@ -49,18 +53,16 @@ Int32 GetImage ( Image* img, FILE* file )
                 } 
                 else
                 {
-                    Int32 y, height, width;
-                    height = img->height;
-                    width = img->width;
-                    if ( img->format == IMG_YUV420 && i > 0 )
+                    Int32 y;
+                    if ( imgFormat == IMG_YUV420 && i > 0 )
                     {
-                        height /= 2;
-                        width /= 2;
+                        imgHeight /= 2;
+                        imgWidth /= 2;
                     }   
 
-                    for ( y = 0; y < height && readStatus == STATUS_OK; ++y)
+                    for ( y = 0; y < imgHeight && readStatus == STATUS_OK; ++y)
                     {
-                        chread = fread ( img->planes[i].data + stride * y, width, 1, file );
+                        chread = fread ( imgData + imgStride * y, imgWidth, 1, file );
 
                         if ( chread != 1 )
                         {
@@ -324,8 +326,8 @@ Int32 main ( Int32 argc, char* argv[] ) {
         Parseaza path-ul de intrare si iesire pentru parametrii
     */
 
-    HeapMemory* heapMem; 
-    status = HeapMemory_Create ( &heapMem );
+    //HeapMemory* heapMem; 
+    //status = HeapMemory_Create ( &heapMem );
 
     for ( i = 1; i < argc && status == STATUS_OK; i += 2 )
     {

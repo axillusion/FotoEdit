@@ -1,7 +1,8 @@
 #ifndef IMAGE_H_INCLUDED
 #define IMAGE_H_INCLUDED
 
-#include "GenerateMovie.h"
+#include "Defines.h"
+#include "stdio.h"
 
 #define IMG_GRAY 1
 #define IMG_RGB 2
@@ -10,16 +11,7 @@
 
 #define MAX_NUM_PLANES 3
 
-typedef struct Rectangle
-{
-    Int32 top, left, width, height;
-} Rectangle;
-
-typedef struct ImgPlane {
-    void* data;
-    UInt32 stride;
-} ImgPlane;
-
+typedef struct ImgPlane ImgPlane;
 typedef struct Image Image; 
 
 UInt32 Image_GetWidth ( 
@@ -34,10 +26,12 @@ UInt8 Image_GetBPP (
 UInt8 Image_GetFormat ( 
     IN Image *img );
 
+/*
 UInt8 Image_GetNumPlanes (
-    In Image *img );
+    IN Image *img );
+*/
 
-UInt8 Image_GetPlaneStride (
+UInt32 Image_GetPlaneStride (
     IN Image *img,
     IN UInt8 plane );
 
@@ -115,7 +109,7 @@ class IMemory
         virtual void* Alloc ( int size ) = 0;
         virtual void Free ( void* addr ) = 0;
 };*/
-
+/*
 struct IMemory_VFT
 {
     int ( *GetType ) ( void );
@@ -126,7 +120,7 @@ struct IMemory_VFT
 typedef struct IMemory {
     struct IMemory_VFT* vft;
 } IMemory;
-
+*/
 /*
 class AbstractMemory: public IMemory
 {
@@ -138,7 +132,7 @@ class AbstractMemory: public IMemory
     protected :
         int m_size;
 };*/
-
+/*
 struct AbstractMemory_VFT {
     int ( *GetType ) ( void );
     void* ( *Alloc ) ( int size );
@@ -150,7 +144,7 @@ typedef struct AbstractMemory {
     struct AbstractMemory_VFT* vft;
     int m_size;
 };
-
+*/
 /*
 class HeapMemory: public AbstractMemory 
 {
@@ -165,7 +159,7 @@ class HeapMemory: public AbstractMemory
 
         }
 };*/
-
+/*
 typedef struct HeapMemory {
     int m_size;
     void* ( *Alloc ) ( int size );
@@ -179,6 +173,7 @@ typedef struct ArrayMemory {
     void ( *PrintStatistics )();
     int m_size;
 } ArrayMemory;
+*/
 /*
 class ArrayMemory: public AbstractMemory 
 {
@@ -203,7 +198,7 @@ class Image
         }
         
 };*/
-
+/*
 void ImageCreate ( IMemory *memory )
 {
     ArrayMemory *absMem = ( ArrayMemory* ) memory;
@@ -223,3 +218,4 @@ void Init()
     heap->Alloc = HeapAlloc;
     ImageCreate ( heap );
 }
+*/

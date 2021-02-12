@@ -1,3 +1,6 @@
+#ifndef DEFINES_H_INCLUDED
+#define DEFINES_H_INCLUDED
+
 #define IN
 #define OUT
 
@@ -14,3 +17,5 @@ typedef unsigned int UInt32;
 
 #define STATUS_OK 0
 #define STATUS_FAIL -1
+
+#endif // DEFINES_H_INCLUDED

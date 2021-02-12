@@ -1,9 +1,8 @@
 #ifndef HEAP_MEMORY_H_INCLUDED
 #define HEAP_MEMORY_H_INCLUDED
 
-#include "Macros.h"
+#include "Defines.h"
 #include "AbstractMemory.h"
-
 
 typedef struct Node
 {
@@ -15,12 +14,13 @@ typedef struct Node
 } Node;
 
 typedef struct HeapMemory {
-    // ppublic fields
+    // public fields
     struct HeapMemory_VFT* vft;
     // protected fields
     UInt32 peak;
     UInt32 usage;
     //private fields 
+	Node* List;
     //Node* List;
 } HeapMemory;
 

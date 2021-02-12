@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
-#include "Macros.h"
 #include "Image.h"
+#include "ImagePriv.h"
 #include "Color.h"
 
 static void CopyPlane ( 
