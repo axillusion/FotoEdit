@@ -23,9 +23,6 @@ Int32 GenerateMovie (
     FILE* fout = NULL;
     Image* img;
 	UInt32 imgWidth, imgHeight, imgFormat;
-	imgWidth = Image_GetWidth ( img );
-	imgHeight = Image_GetHeight ( img );
-	imgFormat = Image_GetFormat ( img );
 
     srand( time ( NULL ) );
 
@@ -57,6 +54,10 @@ Int32 GenerateMovie (
 
     if ( status == STATUS_OK ) 
     {
+		imgWidth = Image_GetWidth ( img );
+		imgHeight = Image_GetHeight ( img );
+		imgFormat = Image_GetFormat ( img );
+
         UInt32 size;
         Int32 y = imgWidth / 2 - 5;
         Int32 x = imgHeight / 2 - 5;

@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <LibImage.h>
 #include "Defines.h"
+#include "GenerateMovie.h"
 
 Int32 GetImage ( Image* img, FILE* file ) 
 { 
@@ -30,7 +31,8 @@ Int32 GetImage ( Image* img, FILE* file )
     {
         UInt32 dataSize;
         UInt8 numPlanes;
-        Int32 i, imgStride, imgData;
+        Int32 i, imgStride;
+		void* imgData;
 		UInt32 chread;
 
         readStatus = GetNrPlanes ( imgFormat, &numPlanes );
@@ -62,7 +64,7 @@ Int32 GetImage ( Image* img, FILE* file )
 
                     for ( y = 0; y < imgHeight && readStatus == STATUS_OK; ++y)
                     {
-                        chread = fread ( imgData + imgStride * y, imgWidth, 1, file );
+                        chread = fread ( ( UInt8* ) imgData + imgStride * y, imgWidth, 1, file );
 
                         if ( chread != 1 )
                         {

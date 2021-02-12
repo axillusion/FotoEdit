@@ -831,6 +831,6 @@ static void CopyPlane (
     
     for ( y = 0; y < height; ++y )
     {
-        memcpy ( dst->data + dst->stride * y, src->data + src->stride * y, width );
+        memcpy ( ( UInt8* ) dst->data + dst->stride * y, ( UInt8* ) src->data + src->stride * y, width );
     }
 }

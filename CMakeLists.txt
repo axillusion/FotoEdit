@@ -10,7 +10,7 @@ file(GLOB_RECURSE APP_SRCS
 )
 
 file ( GLOB_RECURSE APP_INC 
-		"${APP_SRC_PATH}/*h"
+		"${APP_SRC_PATH}/src"
 	)
 
 add_executable( App ${APP_SRCS} )

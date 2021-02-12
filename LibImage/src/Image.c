@@ -515,7 +515,7 @@ Int32 CropImage (
         crop->format = img -> format;
         crop->bpp = img -> bpp;
         crop->planes[0].stride = img -> planes[0].stride;
-        crop->planes[0].data = img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
+        crop->planes[0].data = ( UInt8* ) img -> planes[0].data + offsetY * img -> planes[0].stride + offsetX;
     }
     return status;
 }

@@ -18,6 +18,4 @@ struct Image
     UInt8 format;
 };
 
-
-
 #endif /* IMAGEPRIV_H_INCLUDED */

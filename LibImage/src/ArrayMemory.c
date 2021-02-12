@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "ArrayMemory.h"
 
 static void PrintStatistics()
@@ -7,7 +8,7 @@ static void PrintStatistics()
   /* peak + usage */
 }
 
-static void Alloc ( Int32 size )
+static void* Alloc ( Int32 size )
 {
    return malloc ( size );
 }
