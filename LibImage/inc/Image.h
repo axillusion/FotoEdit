@@ -1,55 +1,184 @@
 #ifndef IMAGE_H_INCLUDED
 #define IMAGE_H_INCLUDED
 
-#include "Defines.h"
-#include "stdio.h"
-
 #define IMG_GRAY 1
 #define IMG_RGB 2
 #define IMG_YUV420 3
 #define IMG_YUV444 4
 
-#define MAX_NUM_PLANES 3
-
 typedef struct ImgPlane ImgPlane;
 typedef struct Image Image; 
 
-UInt32 Image_GetWidth ( 
-    IN Image *img );
+/*------------------------------------------------------------------------------
+ * Image_GetWidth
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the width of a specified Image object.
 
-UInt32 Image_GetHeight ( 
-    IN Image *img );
+@param [in] img
+    pointer to the Image object
+@return 
+	the width of the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
 
-UInt8 Image_GetBPP ( 
-    IN Image *img );
+Int32 Image_GetWidth ( 
+    IN const Image *img );
 
-UInt8 Image_GetFormat ( 
-    IN Image *img );
+/*------------------------------------------------------------------------------
+ * Image_GetHeight
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the height of a specified Image object.
 
-/*
-UInt8 Image_GetNumPlanes (
-    IN Image *img );
-*/
+@param [in] img
+    pointer to the Image object
+@return 
+	the height of the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
 
-UInt32 Image_GetPlaneStride (
-    IN Image *img,
-    IN UInt8 plane );
+Int32 Image_GetHeight ( 
+    IN const Image *img );
+
+/*------------------------------------------------------------------------------
+ * Image_GetBPP
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the BPP ( bits per pixel ) of a specified Image object.
+
+@param [in] img
+    pointer to the Image object
+@return 
+	the bpp of the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
+
+Int8 Image_GetBPP ( 
+    IN const Image *img );
+
+/*------------------------------------------------------------------------------
+ * Image_GetFormat
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the format of a specified Image object.
+
+@param [in] img
+    pointer to the Image object
+@return 
+	the format of the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
+
+Int8 Image_GetFormat ( 
+    IN const Image *img );
+
+/*------------------------------------------------------------------------------
+ * Image_GetNumPlanes
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the number of planes of a specified Image object.
+
+@param [in] img
+    pointer to the Image object
+@return 
+	the number of planes of the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
+
+Int8 Image_GetNumPlanes(
+    IN const Image *img );
+
+/*------------------------------------------------------------------------------
+ * Image_GetPlaneStride
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the stride of a specified plane from an Image object.
+
+@param [in] img
+    pointer to the Image object
+@param [in] plane
+	plane number
+@return 
+	the stride of the specified plane from the Image object
+@notes 
+	returns -1 if the Image pointer is invalid
+ ******************************************************************************/
+
+Int32 Image_GetPlaneStride (
+    IN const Image *img,
+    IN const UInt8 plane );
+
+/*------------------------------------------------------------------------------
+ * Image_GetPlaneData
+ *----------------------------------------------------------------------------*/
+/** 
+    Returns the data of a specified plane from an Image object.
+
+@param [in] img
+    pointer to the Image object
+@param [in] plane
+	plane number
+@return 
+	the data of the specified plane from the Image object
+@notes 
+	returns NULL if the Image pointer is invalid
+ ******************************************************************************/
 
 void* Image_GetPlaneData (
-    IN Image *img,
-    IN UInt8 plane );
+    IN const Image *img,
+    IN const UInt8 plane );
 
-Int32 CreateImage(
-    IN UInt8 format,
+/*------------------------------------------------------------------------------
+ * Image_CreateImage
+ *----------------------------------------------------------------------------*/
+/** 
+    Creates an Image object with the specified format, bpp ( bits per pixel )
+	width and height
+
+@param [in] format
+    format of the image
+@param [in] bpp
+	bpp of the image
+@param [in] width
+	width of the image
+@param [in] height
+	height of the image
+@param [out] img 
+	pointer to the Image object 
+@return 
+	the status of the functions, STATUS_FAIL if it encountered issues or 
+	STATUS_OK if everything is completed
+ ******************************************************************************/
+
+Int32 Image_Create(
+    IN IMemory* heap,
+	IN UInt8 format,
     IN UInt8 bpp,
     IN UInt32 width,
     IN UInt32 height,
     OUT Image** img );
     
-void DestroyImage(
+/*------------------------------------------------------------------------------
+ * Image_DestroyImage
+ *----------------------------------------------------------------------------*/
+/** 
+    Destroys the specified Image object
+
+@param [in][out] img 
+	pointer to the Image object 
+
+ ******************************************************************************/
+
+void Image_Destroy(
     IN OUT Image** img);
 
-Int32 CropImage (
+Int32 Image_Crop (
     IN const Image* img,
     IN UInt32 cropWidth,
     IN UInt32 cropHeight,
@@ -57,36 +186,32 @@ Int32 CropImage (
     IN UInt32 offsetY, 
     OUT Image* crop );
 
-Int32 GetPlaneSize(
+Int32 Image_GetPlaneSize(
     IN UInt8 format,
     IN UInt32 width,
     IN UInt32 height,
     IN UInt8 plane,
     OUT UInt32* planeSize);
-
-Int32 GetNrPlanes(
-    IN UInt8 format,
-    OUT UInt8* numPlanes);
     
-Int32 GetImageSize(
+Int32 Image_GetImageSize(
     IN Image* img,
     OUT UInt32* size);
 
-Int32 CheckImage(
+Int32 Image_Check(
     IN const Image* img,
     IN UInt32 requiredWidth,
     IN UInt32 requiredHeight,
     IN UInt8 requiredFormat);
 
-Int32 ClearImage (
+Int32 Image_Clear (
     IN OUT Image* img,
     UInt32 color );
 
-Int32 WriteImageToFile ( 
+Int32 Image_WriteImageToFile ( 
     IN const Image* img,
     IN FILE* file );
 
-Int32 ConvertImage ( 
+Int32 Image_Convert ( 
     IN const Image* src,
     OUT Image* dst );
 

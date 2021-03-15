@@ -9,14 +9,16 @@ file(GLOB_RECURSE APP_SRCS
     "${APP_SRC_PATH}/*.h"
 )
 
-file ( GLOB_RECURSE APP_INC 
-		"${APP_SRC_PATH}/src"
-	)
-
 add_executable( App ${APP_SRCS} )
 
 add_subdirectory(LibImage)
 target_link_libraries(App PUBLIC LibImage)
-target_include_directories(App PUBLIC 
-							${APP_INC}
-)	
+target_include_directories(App PUBLIC "home/calin/FotoEdit/LibImage/inc" )
+
+find_package(Doxygen OPTIONAL_COMPONENTS dot)
+if (DOXYGEN_FOUND)
+  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
+  doxygen_add_docs(doc
+    ${CMAKE_SOURCE_DIR}
+  )
+endif(DOXYGEN_FOUND)

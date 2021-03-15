@@ -1,7 +1,6 @@
 #ifndef GENERATE_MOVIE_H_INCLUDED
 #define GENERATE_MOVIE_H_INCLUDED
 
-#include <LibImage.h>
 #include "Defines.h"
 
 typedef struct Rectangle
@@ -10,6 +9,7 @@ typedef struct Rectangle
 } Rectangle;
 
 Int32 GenerateMovie (
+	IN IMemory* heap,
     IN Int32 width,
     IN Int32 height,
     IN Int32 numFrames,

@@ -1,22 +1,22 @@
 #include <stdio.h>
 #include <assert.h>
-#include "Color.h"
+#include "LibImage.h"
 
-void GetGray ( 
-    IN UInt32 color, 
+void Color_GetGray ( 
+    IN const Color color, 
     OUT UInt8* gray )
 {   
     UInt8 red, green, blue;
 
     assert ( gray != NULL );
 
-    GetRGB ( color, &red, &green, &blue );
+    Color_GetRGB ( color, &red, &green, &blue );
 
     *gray = ( red + green + blue ) / 3;
 }
 
-void GetRGB ( 
-    IN UInt32 color, 
+void Color_GetRGB ( 
+    IN const Color color, 
     OUT UInt8* red, 
     OUT UInt8* green, 
     OUT UInt8* blue )
@@ -30,22 +30,22 @@ void GetRGB (
     *blue = ( UInt8 ) color;
 }
 
-void GetYUV ( 
-    IN UInt32 color, 
+void Color_GetYUV ( 
+    IN const Color color, 
     OUT UInt8* Y, 
     OUT UInt8* U, 
     OUT UInt8* V )
 {
     UInt8 red, green, blue;
 
-    GetRGB ( color, &red, &green, &blue );
-    RGBToYUV ( red, green, blue, Y, U, V );
+    Color_GetRGB ( color, &red, &green, &blue );
+    Color_RGBToYUV ( red, green, blue, Y, U, V );
 }
 
-void RGBToYUV ( 
-    IN UInt8 R,
-    IN UInt8 G,
-    IN UInt8 B,
+void Color_RGBToYUV ( 
+    IN const UInt8 R,
+    IN const UInt8 G,
+    IN const UInt8 B,
     OUT UInt8* Y,
     OUT UInt8* U,
     OUT UInt8* V )
@@ -59,10 +59,10 @@ void RGBToYUV (
     *V = ( UInt8 ) ( 0.439f * R - 0.368f * G - 0.071f * B + 128 );
 }
 
-void YUVToRGB ( 
-    IN UInt8 Y,
-    IN UInt8 U,
-    IN UInt8 V,
+void Color_YUVToRGB ( 
+    IN const UInt8 Y,
+    IN const UInt8 U,
+    IN const UInt8 V,
     OUT UInt8* R,
     OUT UInt8* G,
     OUT UInt8* B )

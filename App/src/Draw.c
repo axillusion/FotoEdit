@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include "LibImage.h"
+#include "GenerateMovie.h"
 #include "Draw.h"
 
 static void DrawRectangleGray ( Image* img, const Rectangle* rectangle, UInt32 color );
@@ -25,7 +27,7 @@ Int32 DrawRectangle (
     } 
     else
     {
-        status = CheckImage ( img, imgWidth, imgHeight, imgFormat );
+        status = Image_Check ( img, imgWidth, imgHeight, imgFormat );
     }
 
     if ( status == STATUS_OK )
@@ -132,7 +134,7 @@ static void DrawRectangleGray (
     assert ( img != NULL );
     assert ( imgFormat == IMG_GRAY );
     
-    GetGray ( color, &gray );
+    Color_GetGray ( color, &gray );
 
     imgDataStride = Image_GetPlaneStride ( img, 0 );
     imgData = ( UInt8* ) Image_GetPlaneData ( img, 0 );
@@ -156,7 +158,7 @@ static void DrawRectangleRGB (
     assert ( img != NULL );
     assert ( imgFormat == IMG_RGB );
     
-    GetRGB ( color, &red, &green, &blue );
+    Color_GetRGB ( color, &red, &green, &blue );
 
     imgDataStrideRed = Image_GetPlaneStride ( img, 0 );
     imgDataStrideGreen= Image_GetPlaneStride ( img, 1 );
@@ -189,7 +191,7 @@ static void DrawRectangleYUV420 (
     assert ( rectangle != NULL );
     assert ( imgFormat == IMG_YUV420 );
     
-    GetYUV ( color, &Y, &U, &V );
+    Color_GetYUV ( color, &Y, &U, &V );
 
     imgDataStrideY = Image_GetPlaneStride ( img, 0 );
     imgDataStrideU= Image_GetPlaneStride ( img, 1 );
@@ -226,7 +228,7 @@ static void DrawRectangleYUV444 (
     assert ( rectangle != NULL );
     assert ( imgFormat == IMG_YUV444 );
     
-    GetYUV ( color, &Y, &U, &V );
+    Color_GetYUV ( color, &Y, &U, &V );
 
     imgDataStrideY = Image_GetPlaneStride ( img, 0 );
     imgDataStrideU= Image_GetPlaneStride ( img, 1 );

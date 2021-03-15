@@ -2,14 +2,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "Image.h"
-#include "Color.h"
+
+#include "LibImage.h"
 #include "ImagePriv.h"
 
-UInt32 Image_GetWidth ( 
-    IN Image *img )
+Int32 Image_GetWidth ( 
+    IN const Image *img )
 {
-    UInt32 width = 0;
+    Int32 width = -1;
 
     if ( img != NULL )
     {
@@ -19,10 +19,10 @@ UInt32 Image_GetWidth (
     return width;
 }
 
-UInt32 Image_GetHeight ( 
-    IN Image *img )
+Int32 Image_GetHeight ( 
+    IN const Image *img )
 {
-    UInt32 height = 0;
+    UInt32 height = -1;
 
     if ( img != NULL )
     {
@@ -32,10 +32,10 @@ UInt32 Image_GetHeight (
     return height;
 }
 
-UInt8 Image_GetBPP ( 
-    IN Image *img )
+Int8 Image_GetBPP ( 
+    IN const Image *img )
 {
-    UInt8 bpp = 0;
+    UInt8 bpp = -1;
 
     if ( img != NULL )
     {
@@ -45,10 +45,10 @@ UInt8 Image_GetBPP (
     return bpp;
 }
 
-UInt8 Image_GetFormat ( 
-    IN Image *img )
+Int8 Image_GetFormat ( 
+    IN const Image *img )
 {
-    UInt8 format = 0;
+    UInt8 format = -1;
 
     if ( img != NULL )
     {
@@ -58,11 +58,38 @@ UInt8 Image_GetFormat (
     return format;
 }
 
-UInt32 Image_GetPlaneStride (
-    IN Image *img,
-    IN UInt8 plane )
+Int8 Image_GetNumPlanes (
+    IN const Image *img )
 {
-	UInt32 stride = 0;
+	Int8 numPlanes = -1;
+
+	if ( img != NULL )
+	{
+		switch ( img->format ) 
+		{
+			case IMG_GRAY :
+				numPlanes = 1;
+				break;
+			case IMG_RGB :
+				numPlanes = 3;
+				break;
+			case IMG_YUV420 :
+				numPlanes = 3;
+				break;
+			case IMG_YUV444 :
+				numPlanes = 3;
+				break;
+		}
+	}
+
+    return numPlanes;
+}
+
+Int32 Image_GetPlaneStride (
+    IN const Image *img,
+    IN const UInt8 plane )
+{
+	UInt32 stride = -1;
 
 	if ( img != NULL )
 	{
@@ -73,8 +100,8 @@ UInt32 Image_GetPlaneStride (
 }
 
 void* Image_GetPlaneData (
-    IN Image *img,
-    IN UInt8 plane )
+    IN const Image *img,
+    IN const UInt8 plane )
 {
 	void* data = NULL;
 
@@ -87,14 +114,14 @@ void* Image_GetPlaneData (
 }
 
 /*------------------------------------------------------------------------------
- * ClearImage
+ * Image_Clear
  *----------------------------------------------------------------------------*/
-Int32 ClearImage (
+Int32 Image_Clear (
     IN OUT Image* img,
     UInt32 color )
 {
     
-    Int32 status = CheckImage ( img, img->width, img->height, img->format );
+    Int32 status = Image_Check ( img, img->width, img->height, img->format );
     
     if ( status == STATUS_OK )
     {
@@ -103,7 +130,7 @@ Int32 ClearImage (
             case IMG_GRAY :
             {
                 UInt8 gray;
-                GetGray ( color, &gray );
+                Color_GetGray ( color, &gray );
                 memset ( img->planes[0].data, gray, img->height * img->planes[0].stride );
                 break;
             }
@@ -111,7 +138,7 @@ Int32 ClearImage (
             case IMG_RGB :
             {
                 UInt8 red, green, blue;
-                GetRGB ( color, &red, &green, &blue );
+                Color_GetRGB ( color, &red, &green, &blue );
                 memset ( img->planes[0].data, red, img->height * img->planes[0].stride );
                 memset ( img->planes[1].data, green, img->height * img->planes[1].stride );
                 memset ( img->planes[2].data, blue, img->height * img->planes[2].stride );
@@ -121,7 +148,7 @@ Int32 ClearImage (
             case IMG_YUV420 :
             {
                 UInt8 Y, U, V;
-                GetYUV ( color, &Y, &U, &V );
+                Color_GetYUV ( color, &Y, &U, &V );
 
                 memset ( img->planes[0].data, Y, img->height * img->planes[0].stride );
                 memset ( img->planes[1].data, U,  ( img->height / 2 ) * img->planes[1].stride );
@@ -132,7 +159,7 @@ Int32 ClearImage (
             case IMG_YUV444 :
             {
                 UInt8 Y, U, V;
-                GetYUV ( color, &Y, &U, &V );
+                Color_GetYUV ( color, &Y, &U, &V );
 
                 memset ( img->planes[0].data, Y, img->height * img->planes[0].stride );
                 memset ( img->planes[1].data, U, img->height * img->planes[1].stride );
@@ -147,9 +174,9 @@ Int32 ClearImage (
 
 
 /*------------------------------------------------------------------------------
- * CheckImage
+ * Image_Check
  *----------------------------------------------------------------------------*/
-Int32 CheckImage(
+Int32 Image_Check (
     IN const Image* img,
     IN UInt32 requiredWidth,
     IN UInt32 requiredHeight,
@@ -185,7 +212,7 @@ Int32 CheckImage(
     {
         Int32 plane;
         UInt8 planes = 0;
-        GetNrPlanes ( img->format, &planes );
+        Image_GetNumPlanes ( img );
         for ( plane = 0; plane < planes && status == STATUS_OK; ++plane ) 
         {
             if ( img->planes[plane].data == NULL )
@@ -193,7 +220,6 @@ Int32 CheckImage(
                 printf ( "CheckImage: Unallocated image plane\n" );
                 status = STATUS_FAIL;
             }
-
         }
     }
 
@@ -201,9 +227,9 @@ Int32 CheckImage(
 }
 
 /*------------------------------------------------------------------------------
- * GetImageSize
+ * Image_GetImageSize
  *----------------------------------------------------------------------------*/
-Int32 GetImageSize(
+Int32 Image_GetImageSize(
     IN Image* img,
     OUT UInt32* size)
 {
@@ -218,11 +244,11 @@ Int32 GetImageSize(
         UInt8 planes = 0;
         UInt32 planeSize = 0;
         Int32 plane;
-        GetNrPlanes ( img->format, &planes);
+        Image_GetNumPlanes ( img );
         size = 0;
         for ( plane = 0; plane < planes; ++plane ) 
         {
-            GetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
+            ImageGetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
             size += planeSize;
         }
     }
@@ -230,10 +256,10 @@ Int32 GetImageSize(
 }
 
 /*------------------------------------------------------------------------------
- * GetPlaneSize
+ * Image_GetPlaneSize
  *----------------------------------------------------------------------------*/
 
-Int32 GetPlaneSize(
+Int32 Image_GetPlaneSize(
     IN UInt8 format,
     IN UInt32 width,
     IN UInt32 height,
@@ -330,52 +356,10 @@ Int32 GetPlaneSize(
 }
 
 /*------------------------------------------------------------------------------
- * GetNrPlanes
- *----------------------------------------------------------------------------*/
-Int32 GetNrPlanes (
-    IN UInt8 format,
-    OUT UInt8* numPlanes)
-{
-    Int32 status;
-    
-    if(numPlanes == NULL)
-    {
-        status = STATUS_FAIL;
-    }
-    else
-    {
-        status = STATUS_OK;
-        switch ( format ) 
-        {
-            case IMG_GRAY :
-                *numPlanes = 1;
-                break;
-            case IMG_RGB :
-                *numPlanes = 3;
-                break;
-            case IMG_YUV420 :
-                *numPlanes = 3;
-                break;
-            case IMG_YUV444 :
-                *numPlanes = 3;
-                break;
-            default :
-            {
-                printf("GetNrPlanes: invalid format\n");
-                status = STATUS_FAIL;
-                *numPlanes = 0;
-                break;
-            }
-        }
-    }
-
-    return status;
-}
-
-/*------------------------------------------------------------------------------
  * CreateImage
  *----------------------------------------------------------------------------*/
-Int32 CreateImage(
+Int32 Image_Create(
+	IN IMemory* heap,
     IN UInt8 format,
     IN UInt8 bpp,
     IN UInt32 width,
@@ -386,15 +370,15 @@ Int32 CreateImage(
     Image* newImg = NULL;
     UInt8 nrPlanes = 0;
 
-    if ( img == NULL ) 
+    if ( img == NULL && heap != NULL ) 
     {
-        printf ( "CreateImage: invalid pointer!\n" );
-        status = STATUS_FAIL;
+        printf ( "CreateImage: invalid arguments!\n" );
+        status = STATUS_INVALID_ARGUMENT;
     } 
     else
     {
         UInt32 size = (UInt32)sizeof(Image);
-        newImg = malloc ( size );
+        newImg = heap->vft->Alloc ( heap, size );
 
         if ( newImg == NULL )
         {
@@ -409,6 +393,7 @@ Int32 CreateImage(
             newImg->height = height;
             newImg->format = format;
             newImg->bpp = bpp;
+			newImg->heap = heap;
 
             status = STATUS_OK;
         }
@@ -416,7 +401,9 @@ Int32 CreateImage(
 
     if ( status == STATUS_OK )
     {
-        status = GetNrPlanes ( format, &nrPlanes);
+        nrPlanes = Image_GetNumPlanes ( newImg );
+		if ( nrPlanes == STATUS_INVALID_ARGUMENT )
+			status = STATUS_FAIL;
     }
 
     if ( status == STATUS_OK ) 
@@ -426,11 +413,11 @@ Int32 CreateImage(
 
         for ( plane = 0; ((plane < nrPlanes) && (status == STATUS_OK)); ++plane ) 
         {
-            status = GetPlaneSize(format, width, height, plane + 1, &planeSize);
+            status = Image_GetPlaneSize(format, width, height, plane + 1, &planeSize);
 
             if (status == STATUS_OK)
             {
-                newImg->planes[plane].data = malloc(planeSize);
+                newImg->planes[plane].data = heap->vft->Alloc ( heap, planeSize );
 
                 if (newImg->planes[plane].data == NULL)
                 {
@@ -459,12 +446,12 @@ Int32 CreateImage(
 }
 
 /*------------------------------------------------------------------------------
- * DestroyImage
+ * Image_Destroy
  *----------------------------------------------------------------------------*/
-void DestroyImage (
+void Image_Destroy (
     IN OUT Image** img ) 
 {
-    if (img != NULL && *img != NULL) 
+    if (img != NULL && *img != NULL ) 
     {
         Int32 plane;
 
@@ -474,6 +461,7 @@ void DestroyImage (
             {
                 //printf ( "DestroyImage: free plane %d\n", plane );
                 //free((*img)->planes[plane].data);
+				(*img)->heap->vft->Free ( (*img)->heap, (*img)->planes[plane].data );
             } else
             {
                 printf ( "DestroyImage: empty image plane %d\n", plane );
@@ -492,7 +480,7 @@ void DestroyImage (
 /*------------------------------------------------------------------------------
  * CropImage
  *----------------------------------------------------------------------------*/
-Int32 CropImage (
+Int32 Image_Crop (
     IN const Image* img,
     IN UInt32 cropWidth,
     IN UInt32 cropHeight,
@@ -502,10 +490,10 @@ Int32 CropImage (
 {
 
     Int32 status = STATUS_OK;
-    status = CheckImage ( img, img->width, img->height, img->format );
+    status = Image_Check ( img, img->width, img->height, img->format );
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( crop, crop->width, crop->height, crop->format );
+        status = Image_CheckImage ( crop, crop->width, crop->height, crop->format );
     }
 
     if ( status == STATUS_OK ) 
@@ -561,9 +549,7 @@ static Int32 WriteImgPlane (
     return status;
 }
 
-
-
-Int32 WriteImageToFile ( 
+Int32 Image_WriteImageToFile ( 
     IN const Image* img,
     OUT FILE* file )
 {

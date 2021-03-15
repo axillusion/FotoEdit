@@ -7,15 +7,21 @@ ArrayMemory + Heap memory fisiere separate .c + .h cu implementare
 */
 
 typedef struct IMemory {
-    struct IMemory_VFT* vft;
+    struct IMemoryVFT* vft;
 } IMemory;
 
-struct IMemory_VFT
+struct IMemoryVFT
 {
-    int ( *GetType ) ( IMemory* self );
-    void* ( *Alloc ) ( IMemory* self, int size );
-    void ( *Free ) ( IMemory* self, void* addr );
-    
+    void* ( *Alloc ) ( 
+		IN IMemory* memory, 
+		IN UInt32 size );
+	
+    void ( *Free ) ( 
+		IN IMemory* memory, 
+		IN void* addr );
+		
+	void ( *Destroy ) ( 
+		IN OUT IMemory* memory );
 };
 
 #endif // MEMORY_H_INCLUDED

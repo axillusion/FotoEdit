@@ -24,58 +24,66 @@ Int32 GetImage ( Image* img, FILE* file )
     } 
     else 
     {
-        readStatus = CheckImage ( img, imgWidth, imgHeight, imgFormat );
+        readStatus = Image_Check ( img, imgWidth, imgHeight, imgFormat );
     }
 
     if ( readStatus == STATUS_OK ) 
     {
         UInt32 dataSize;
-        UInt8 numPlanes;
+        Int8 numPlanes;
         Int32 i, imgStride;
 		void* imgData;
 		UInt32 chread;
 
-        readStatus = GetNrPlanes ( imgFormat, &numPlanes );
+        numPlanes = Image_GetNumPlanes ( img );
 
-        for ( i = 0; i < numPlanes && readStatus == STATUS_OK; ++i )
-        {
-            imgStride = Image_GetPlaneStride ( img, i );
-			imgData = Image_GetPlaneData ( img, i );
-            readStatus = GetPlaneSize ( imgFormat, imgWidth, imgHeight, i + 1, &dataSize );
-            if ( readStatus == STATUS_OK )
-            {
-                if ( imgWidth == imgStride )
-                {
-                    chread = fread ( imgData, dataSize, 1, file );
-                    if ( chread != 1 )
-                    {
-                        readStatus = STATUS_FAIL;
-                        printf ( "GetImage: Image not read\n" );
-                    }
-                } 
-                else
-                {
-                    Int32 y;
-                    if ( imgFormat == IMG_YUV420 && i > 0 )
-                    {
-                        imgHeight /= 2;
-                        imgWidth /= 2;
-                    }   
+		if ( numPlanes > -1 )
+		{
+			for ( i = 0; i < numPlanes && readStatus == STATUS_OK; ++i )
+			{
+				imgStride = Image_GetPlaneStride ( img, i );
+				imgData = Image_GetPlaneData ( img, i );
+				readStatus = Image_GetPlaneSize ( imgFormat, imgWidth, imgHeight, i + 1, &dataSize );
+				if ( readStatus == STATUS_OK )
+				{
+					if ( imgWidth == imgStride )
+					{
+						chread = fread ( imgData, dataSize, 1, file );
+						if ( chread != 1 )
+						{
+							readStatus = STATUS_FAIL;
+							printf ( "GetImage: Image not read\n" );
+						}
+					} 
+					else
+					{
+						Int32 y;
+						if ( imgFormat == IMG_YUV420 && i > 0 )
+						{
+							imgHeight /= 2;
+							imgWidth /= 2;
+						}   
 
-                    for ( y = 0; y < imgHeight && readStatus == STATUS_OK; ++y)
-                    {
-                        chread = fread ( ( UInt8* ) imgData + imgStride * y, imgWidth, 1, file );
+						for ( y = 0; y < imgHeight && readStatus == STATUS_OK; ++y)
+						{
+							chread = fread ( ( UInt8* ) imgData + imgStride * y, imgWidth, 1, file );
 
-                        if ( chread != 1 )
-                        {
-                            readStatus = STATUS_FAIL;
-                            printf ( "GetImage: Image not read\n" );
-                        }
-                    }
-                }
-                
-            }
-        }
+							if ( chread != 1 )
+							{
+								readStatus = STATUS_FAIL;
+								printf ( "GetImage: Image not read\n" );
+							}
+						}
+					}
+					
+				}
+			}
+		} 
+		else
+		{
+			printf ( "GetImage: Corrupted Image object\n" );
+			readStatus = STATUS_FAIL;
+		}
     }
     return readStatus;
 }
@@ -146,6 +154,7 @@ void PrintUsage ( void )
 }
 
 Int32 InitFileAndImage ( 
+	IN IMemory* heap,
     IN const char* path,
     IN Int32 forRead,
     IN UInt32 width,
@@ -186,7 +195,7 @@ Int32 InitFileAndImage (
 
     if ( status == STATUS_OK )
     {
-        status = CreateImage ( format, bpp, width, height, img );
+        status = Image_Create ( heap, format, bpp, width, height, img );
         if (status != STATUS_OK )
         {
             printf("CreateImage failed with status %d", status);
@@ -319,6 +328,7 @@ Int32 main ( Int32 argc, char* argv[] ) {
     Int32 bpp = 0;
     Int32 inputSubsampling = 0;
     Int32 outputSubsampling = 0;
+	IMemory* heap;
 
     Int32 status = STATUS_OK;
     Int32 i;
@@ -409,13 +419,14 @@ Int32 main ( Int32 argc, char* argv[] ) {
 
     if ( status == STATUS_OK ) 
     {
-        status = GenerateMovie ( width, height, 300, inputSubsampling, inputPath );
+        status = GenerateMovie ( heap, width, height, 300, inputSubsampling, inputPath );
     }
 
     if ( status == STATUS_OK ) 
     {
 
         status = InitFileAndImage ( 
+				 heap,
                  inputPath,
                  0, // for read
                  width,
@@ -429,6 +440,7 @@ Int32 main ( Int32 argc, char* argv[] ) {
     if ( status == STATUS_OK )
     {
         status = InitFileAndImage ( 
+			     heap,
                  outputPath,
                  1, // for write
                  width,
@@ -445,12 +457,12 @@ Int32 main ( Int32 argc, char* argv[] ) {
         while ( GetImage ( img, fin ) == STATUS_OK ) 
         {
             printf ( "Proccesing frame %d\n", ++i);
-            ConvertImage ( img, outputImg );
-            WriteImageToFile ( outputImg, fout );
+            Image_Convert ( img, outputImg );
+            Image_WriteImageToFile ( outputImg, fout );
         }
 
-        DestroyImage ( &img );
-        DestroyImage ( &outputImg );
+        Image_Destroy ( &img );
+        Image_Destroy ( &outputImg );
     }
 
     if ( fin != NULL )

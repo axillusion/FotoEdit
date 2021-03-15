@@ -4,6 +4,8 @@ x64/*
 Debug/*
 Build/*
 Video1
+.vscode/*
+doxygen-1.9.1/*
 
 # Prerequisites
 *.d

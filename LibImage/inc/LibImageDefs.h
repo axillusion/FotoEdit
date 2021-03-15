@@ -1,5 +1,5 @@
-#ifndef DEFINES_H_INCLUDED
-#define DEFINES_H_INCLUDED
+#ifndef LIB_IMAGE_DEFS_H_INCLUDED
+#define LIB_IMAGE_DEFS_H_INCLUDED
 
 #define IN
 #define OUT
@@ -12,10 +12,10 @@ typedef unsigned char UInt8;
 typedef unsigned short UInt16;
 typedef unsigned int UInt32;
 
-#define IMG_WIDTH 100
-#define IMG_HEIGHT 100
-
 #define STATUS_OK 0
 #define STATUS_FAIL -1
+#define STATUS_INVALID_ARGUMENT -2
 
-#endif // DEFINES_H_INCLUDED
+#define INVALID_IMG 0xFFFFFFFF
+
+#endif // LIB_IMAGE_DEFS_H_INCLUDED

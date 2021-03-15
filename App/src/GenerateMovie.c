@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <LibImage.h>
 #include "GenerateMovie.h"
 #include "Draw.h"
 
@@ -11,6 +12,7 @@
 /* C:/output/video1.bw */
 
 Int32 GenerateMovie (
+	IN IMemory* heap,
     IN Int32 width,
     IN Int32 height,
     IN Int32 numFrames,
@@ -49,7 +51,7 @@ Int32 GenerateMovie (
 
     if ( status == STATUS_OK )
     {
-        status = CreateImage ( format, 8, width, height, &img ); 
+        status = Image_Create ( heap, format, 8, width, height, &img ); 
     }
 
     if ( status == STATUS_OK ) 
@@ -68,13 +70,13 @@ Int32 GenerateMovie (
         Rectangle* rectangle = malloc ( sizeof ( Rectangle ) );
         Int32 step = imgWidth / 10;
 
-        GetPlaneSize ( imgFormat, imgWidth, imgHeight, 1, &size );
+        Image_GetPlaneSize ( imgFormat, imgWidth, imgHeight, 1, &size );
         rectangle->width = length;
         rectangle->height = length;
 
         for ( i = 0; i < numFrames && status == STATUS_OK; ++i )
         {   
-            status = ClearImage ( img, 0x000000 );
+            status = Image_Clear ( img, 0x000000 );
 
             if ( status == STATUS_OK )
             {
@@ -95,7 +97,7 @@ Int32 GenerateMovie (
                     y += dirY[dir] * step;
                     x += dirX[dir] * step;
                 }
-                status = WriteImageToFile ( img, fout );
+                status = Image_WriteImageToFile ( img, fout );
             }
         }
 

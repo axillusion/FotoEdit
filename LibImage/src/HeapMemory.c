@@ -2,7 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h> // malloc 
 #include <string.h> // memset
+
+#include "LibImage.h"
+#include "List.h"
 #include "HeapMemory.h"
+
+typedef struct HeapMemory 
+{
+    struct IMemoryVFT* vft;
+    
+    UInt32 peak;
+    UInt32 usage;
+   
+	Node* List;
+    
+} HeapMemory;
 
 static void* Alloc( HeapMemory* self, Int32 size )
 {
@@ -31,66 +45,67 @@ static void Free ( HeapMemory* self, void* addr )
 }
 
 Int32 HeapMemory_Create ( 
-   OUT HeapMemory** heapMem ) 
+   OUT IMemory** memory ) 
 {
    Int32 status = STATUS_OK;
-   HeapMemory* newHeapMem = NULL;
+   IMemory* newMemory = NULL;
 
-   if ( heapMem == NULL )
+   if ( memory == NULL )
    {
       status = STATUS_FAIL;
-      printf ( "ArrayMemory_Create: Invalid input arguments\n" );
+      printf ( "HeapMemory_Create: Invalid input arguments\n" );
    }  
    else 
    {
-      *heapMem = NULL;
+      *memory = NULL;
    }
 
    if ( status == STATUS_OK )
    {
-      newHeapMem = malloc ( sizeof ( HeapMemory ) );
-      if ( newHeapMem == NULL )
+      newMemory = malloc ( sizeof ( IMemory ) );
+      if ( newMemory == NULL )
       {
          status = STATUS_FAIL;
-         printf ( "Couldn't allocate %d data", ( Int32 ) sizeof ( HeapMemory ) );
+         printf ( "Couldn't allocate %d data", ( Int32 ) sizeof ( IMemory ) );
       } 
       else
       {
-         memset ( newHeapMem, 0, sizeof ( HeapMemory ) );
+         memset ( newMemory, 0, sizeof ( IMemory ) );
       }
       
    }
    
    if ( status == STATUS_OK )
    {
-      newHeapMem->vft->PrintStatistics = PrintStatistics;
-      newHeapMem->vft->Alloc = Alloc;
-      newHeapMem->vft->Free = Free;
-
-      newHeapMem->List = malloc ( sizeof ( Node ) );
-      if ( newHeapMem->List == NULL )
+      //newMemory->vft->PrintStatistics = PrintStatistics;
+      newMemory->vft->Alloc = Alloc;
+      newMemory->vft->Free = Free;
+	  /*
+      newMemory->List = malloc ( sizeof ( Node ) );
+      if ( newMemory->List == NULL )
       {
          status = STATUS_FAIL;
          printf ( "Couldn't allocate %d data", ( Int32 ) sizeof ( Node ) );
       }
       else 
       {
-         memset ( newHeapMem->List, 0, sizeof ( Node ) );
-         newHeapMem->List->next = newHeapMem->List;
-         newHeapMem->List->prev = newHeapMem->List;
+         memset ( newMemory->List, 0, sizeof ( Node ) );
+         newMemory->List->next = newMemory->List;
+         newMemory->List->prev = newMemory->List;
       }
+	  */
    }
 
    if ( status != STATUS_OK )
    {
-      if ( newHeapMem != NULL )
+      if ( newMemory != NULL )
       {
-         free ( newHeapMem );
+         free ( newMemory );
       }
    }
    else 
    {
-      *heapMem = newHeapMem;
+      *memory = newMemory;
    }
 
    return status;

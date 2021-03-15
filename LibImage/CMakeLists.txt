@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(LibImage ${LANG_LIST})
 
-set(LIBIMAGE_SRC_PATH "${LibImage_SOURCE_DIR}")
+set(LIBIMAGE_SRC_PATH "${CMAKE_SOURCE_DIR}")
 
 file(GLOB_RECURSE LIB_SRCS
     "${LIBIMAGE_SRC_PATH}/*.c"
