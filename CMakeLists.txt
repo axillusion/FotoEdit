@@ -1,24 +1,22 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(FotoEdit ${LANG_LIST})
+# Set the root directory
+set(FOTO_EDIT_DIR ${CMAKE_CURRENT_LIST_DIR})
 
-set(APP_SRC_PATH "${FotoEdit_SOURCE_DIR}/App")
-
-file(GLOB_RECURSE APP_SRCS
-    "${APP_SRC_PATH}/*.c"
-    "${APP_SRC_PATH}/*.h"
-)
-
-add_executable( App ${APP_SRCS} )
+project(FotoEdit C)
 
 add_subdirectory(LibImage)
-target_link_libraries(App PUBLIC LibImage)
-target_include_directories(App PUBLIC "home/calin/FotoEdit/LibImage/inc" )
+add_subdirectory(App)
 
-find_package(Doxygen OPTIONAL_COMPONENTS dot)
+find_package(Doxygen )
 if (DOXYGEN_FOUND)
-  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
-  doxygen_add_docs(doc
+  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "README.md")
+  set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+  set(DOXYGEN_ALWAYS_DETAILED_SEC YES)
+  set(DOXYGEN_JAVADOC_BANNER YES)
+  set(DOXYGEN_JAVADOC_BLOCK YES)
+  set(DOXYGEN_EXCLUDE_PATTERNS "${CMAKE_SOURCE_DIR}/LibImage/src" "${CMAKE_SOURCE_DIR}/App/src" )
+  doxygen_add_docs(docs
     ${CMAKE_SOURCE_DIR}
   )
 endif(DOXYGEN_FOUND)

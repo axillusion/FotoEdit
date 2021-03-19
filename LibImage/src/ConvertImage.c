@@ -75,7 +75,7 @@ static Int32 ConvertImageYUV444ToYUV444 (
     OUT Image* dst );
 
 
-Int32 Image_ConvertImage ( 
+Int32 Image_Convert ( 
     IN const Image* src,
     OUT Image* dst )
 {
@@ -89,12 +89,12 @@ Int32 Image_ConvertImage (
     
     if ( status == STATUS_OK ) 
     {
-        status = Image_CheckImage ( src, src->width, src->height, src->format );
+        status = Image_Check ( src, src->width, src->height, src->format );
     }
 
     if ( status == STATUS_OK ) 
     {
-        status = Image_CheckImage ( dst, src->width, src->height, dst->format );
+        status = Image_Check ( dst, src->width, src->height, dst->format );
     }
 
     if ( status == STATUS_OK )
@@ -215,11 +215,11 @@ static Int32 ConvertImageGrayToGray (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_GRAY );
+    status = Image_Check ( src, src->width, src->height, IMG_GRAY );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_GRAY );
+        status = Image_Check ( dst, src->width, src->height, IMG_GRAY );
     }
 
     if ( status == STATUS_OK )
@@ -239,11 +239,11 @@ static Int32 ConvertImageGrayToRGB (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_GRAY );
+    status = Image_Check ( src, src->width, src->height, IMG_GRAY );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_RGB );
+        status = Image_Check ( dst, src->width, src->height, IMG_RGB );
     }
 
     if ( status == STATUS_OK )
@@ -267,11 +267,11 @@ static Int32 ConvertImageGrayToYUV420 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_GRAY );
+    status = Image_Check ( src, src->width, src->height, IMG_GRAY );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV420 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -306,11 +306,11 @@ static Int32 ConvertImageGrayToYUV444 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_GRAY );
+    status = Image_Check ( src, src->width, src->height, IMG_GRAY );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV444 );
     }
 
     if ( status == STATUS_OK )
@@ -348,11 +348,11 @@ static Int32 ConvertImageRGBToGray (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_RGB );
+    status = Image_Check ( src, src->width, src->height, IMG_RGB );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_GRAY );
+        status = Image_Check ( dst, src->width, src->height, IMG_GRAY );
     }
 
     if ( status == STATUS_OK )
@@ -390,11 +390,11 @@ static Int32 ConvertImageRGBToRGB (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = CheckImage ( src, src->width, src->height, IMG_RGB );
+    status = Image_Check ( src, src->width, src->height, IMG_RGB );
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( dst, src->width, src->height, IMG_RGB );
+        status = Image_Check ( dst, src->width, src->height, IMG_RGB );
     }
 
     if ( status == STATUS_OK )
@@ -419,11 +419,11 @@ static Int32 ConvertImageRGBToYUV420 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_RGB );
+    status = Image_Check ( src, src->width, src->height, IMG_RGB );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV420 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -475,11 +475,11 @@ static Int32 ConvertImageRGBToYUV444 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_RGB );
+    status = Image_Check ( src, src->width, src->height, IMG_RGB );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV444 );
     }
 
     if ( status == STATUS_OK )
@@ -525,11 +525,11 @@ static Int32 ConvertImageYUV420ToGray (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV420 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV420 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_GRAY );
+        status = Image_Check ( dst, src->width, src->height, IMG_GRAY );
     }
 
     if ( status == STATUS_OK )
@@ -552,11 +552,11 @@ static Int32 ConvertImageYUV420ToRGB (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV420 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV420 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_RGB );
+        status = Image_Check ( dst, src->width, src->height, IMG_RGB );
     }
 
     if ( status == STATUS_OK )
@@ -603,11 +603,11 @@ static Int32 ConvertImageYUV420ToYUV420 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV420 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV420 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV420 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -632,11 +632,11 @@ static Int32 ConvertImageYUV420ToYUV444 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV420 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV420 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV444 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV444 );
     }
 
     if ( status == STATUS_OK )
@@ -675,11 +675,11 @@ static Int32 ConvertImageYUV444ToGray (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV444 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_GRAY );
+        status = Image_Check ( dst, src->width, src->height, IMG_GRAY );
     }
 
     if ( status == STATUS_OK )
@@ -702,11 +702,11 @@ static Int32 ConvertImageYUV444ToRGB (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV444 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_RGB );
+        status = Image_Check ( dst, src->width, src->height, IMG_RGB );
     }
 
     if ( status == STATUS_OK )
@@ -755,11 +755,11 @@ static Int32 ConvertImageYUV444ToYUV420 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV444 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV420 );
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV420 );
     }
 
     if ( status == STATUS_OK )
@@ -798,11 +798,11 @@ static Int32 ConvertImageYUV444ToYUV444 (
     assert ( src != NULL );
     assert ( dst != NULL );
 
-    status = Image_CheckImage ( src, src->width, src->height, IMG_YUV444 );
+    status = Image_Check ( src, src->width, src->height, IMG_YUV444 );
 
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( dst, src->width, src->height, IMG_YUV444);
+        status = Image_Check ( dst, src->width, src->height, IMG_YUV444);
     }
 
     if ( status == STATUS_OK )

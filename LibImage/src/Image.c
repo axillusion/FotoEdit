@@ -186,7 +186,7 @@ Int32 Image_Check (
 
     if ( img == NULL ) 
     {
-        printf ( "CheckImage: Unnalocated image\n" );
+        printf ( "Image_Check: Unnalocated image\n" );
         status = STATUS_FAIL;
     } 
 
@@ -194,7 +194,7 @@ Int32 Image_Check (
     {
         if ( img->format != requiredFormat )
         {
-            printf ( "CheckImage: Not the required format\n" );
+            printf ( "Image_Check: Not the required format\n" );
             status = STATUS_FAIL;
         }
     }
@@ -203,7 +203,7 @@ Int32 Image_Check (
     {
         if ( ( img->width != requiredWidth ) || ( img->height != requiredHeight ) )
         {
-            printf ( "CheckImage: Not the required dimensions\n" );
+            printf ( "Image_Check: Not the required dimensions\n" );
             status = STATUS_FAIL;
         }
     }
@@ -217,7 +217,7 @@ Int32 Image_Check (
         {
             if ( img->planes[plane].data == NULL )
             {
-                printf ( "CheckImage: Unallocated image plane\n" );
+                printf ( "Image_Check: Unallocated image plane\n" );
                 status = STATUS_FAIL;
             }
         }
@@ -248,7 +248,7 @@ Int32 Image_GetImageSize(
         size = 0;
         for ( plane = 0; plane < planes; ++plane ) 
         {
-            ImageGetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
+            Image_GetPlaneSize ( img->format, img->width, img->height, plane + 1, &planeSize );
             size += planeSize;
         }
     }
@@ -493,7 +493,7 @@ Int32 Image_Crop (
     status = Image_Check ( img, img->width, img->height, img->format );
     if ( status == STATUS_OK )
     {
-        status = Image_CheckImage ( crop, crop->width, crop->height, crop->format );
+        status = Image_Check ( crop, crop->width, crop->height, crop->format );
     }
 
     if ( status == STATUS_OK ) 
@@ -563,7 +563,7 @@ Int32 Image_WriteImageToFile (
 
     if ( status == STATUS_OK )
     {
-        status = CheckImage ( img, img->width, img->height, img->format );
+        status = Image_Check ( img, img->width, img->height, img->format );
     }
 
     if ( status == STATUS_OK )

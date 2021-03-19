@@ -1,17 +1,18 @@
 cmake_minimum_required(VERSION 3.18)
 
-project(LibImage ${LANG_LIST})
+project(LibImage C)
 
-set(LIBIMAGE_SRC_PATH "${CMAKE_SOURCE_DIR}")
-
-file(GLOB_RECURSE LIB_SRCS
-    "${LIBIMAGE_SRC_PATH}/*.c"
-    "${LIBIMAGE_SRC_PATH}/*.h"
+file(GLOB_RECURSE LIB_IMAGE_SRCS
+    "*.c"
+    "*.h"
 )
 
-add_library (LibImage SHARED ${LIB_SRCS})
+add_library (libImage SHARED ${LIB_IMAGE_SRCS})
+set_target_properties(libImage PROPERTIES PREFIX "")
 
-target_include_directories(LibImage
+target_include_directories(libImage
     PUBLIC
-        ${LIBIMAGE_SRC_PATH}/inc
+        inc
 )
+
+

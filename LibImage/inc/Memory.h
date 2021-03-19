@@ -6,6 +6,10 @@ Facem vft pentru Memory + structura
 ArrayMemory + Heap memory fisiere separate .c + .h cu implementare
 */
 
+/**
+ * @file
+ */
+
 typedef struct IMemory {
     struct IMemoryVFT* vft;
 } IMemory;
